@@ -23,6 +23,8 @@ router.post("/forget-password",rateLimition(5,5),authController.forgetPassword)
 
 router.post("/reset-password",rateLimition(5,5),authController.resetPassword)
 
+router.post("/refresh-token",authController.refreshToken)
+
 
 
 

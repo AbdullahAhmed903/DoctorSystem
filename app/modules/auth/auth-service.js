@@ -1,9 +1,7 @@
 import CONFIG from "../../../config/config.js";
 import jwtGenerator from "../../utils/generate-token.js";
-import { constants, getTokenExpiry, randomNumber, sendResponse } from "../../utils/utills-service.js"
+import { constants, randomNumber, sendResponse } from "../../utils/utills-service.js"
 import bcrypt from 'bcryptjs';
-import { v4 as uuidv4 } from 'uuid';
-import tokenSchema from "./token-schema.js";
 import logger from "../../../config/logger.js";
 import { asyncHandler, CustomError } from "../../utils/error-handling.js";
 import patientModel from "../../DB/models/patient-schema.js";
@@ -14,42 +12,7 @@ import CryptoJS from "crypto-js";
 
 
 
-export const createNewUser = async ({ model, data, idPrefix, role, req }) => {
 
-  const existing = await model.findOne({ email: data.email }).lean();
-
-  if (existing) {
-    throw new CustomError("User already exists", constants.RESPONSE_BAD_REQUEST);
-  }
-
-  // Add dynamic ID (doctorId, patientId)
-  data[`${role}Id`] = idPrefix + uuidv4();
-
-  const newUser = new model(data);
-  const savedUser = await newUser.save();
-
-  // Generate token
-  const token = jwtGenerator(
-    { [`${role}Id`]: savedUser[`${role}Id`], TO: role },
-    CONFIG.JWT_SECRET_KEY,
-    1,
-    "h"
-  );
-
-
-  // Send email
-    // verifyEmailSender(req, token, data.email, data.name)
-      const link=`${req.protocol}://${req.headers.host}/api/v1/auth/verifyEmail/${token}`;
-    sendEmail({email:data.email,type:"VERIFY_EMAIL",payload:{email:data.email,name:data.name,link:link}})
-    .then(() => logger.info(`Verification email sent to ${data.email}`))
-    .catch(err => logger.error("Email send error:", err));
-
-  // Return proper response
-  return {
-    status: constants.RESPONSE_CREATED,
-    message: "User registered successfully. Please check your email.",
-  };
-};
 
 
 
@@ -94,7 +57,7 @@ export const loginUser=async(req,res,model,role,roleId)=>{
             if(!isPasswordCorrect){
             return sendResponse(res,constants.RESPONSE_UNAUTHORIZED,"Invalid credentials")
             }
-                const token=jwtGenerator({[`${role}Id`]: user[`${role}Id`], TO: role },CONFIG.JWT_SECRET_KEY,1,"h");
+                const token=jwtGenerator({[`${role}Id`]: user[`${role}Id`], TO: role },CONFIG.JWT_SECRET_KEY,30,"s");
                 const refreshToken=jwtGenerator({ [`${role}Id`]: user[`${role}Id`], TO: role},CONFIG.JWT_REFRESH_SECRET_KEY,7,"d")
 
 
@@ -106,20 +69,12 @@ export const loginUser=async(req,res,model,role,roleId)=>{
                     return sendResponse(res,constants.RESPONSE_UNAUTHORIZED,"Email not verified. Please verify your email to login.")
                 }
                 else{
-                    
-                // await tokenSchema.updateOne(
-                //     { [roleId]: user[roleId] },
-                //     { $set: { token }},
-                //     { upsert: true }
-                //     );
                     res.cookie('refreshToken', refreshToken, {
                       httpOnly: true,
-                      secure: true,
+                      secure: false,
                       sameSite: 'strict',
                       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
                     });
-
-                    // getTokenExpiry(token)
 
                     return sendResponse(res, constants.RESPONSE_SUCCESS, "Login Succeed", {token:token}, []);
                 }

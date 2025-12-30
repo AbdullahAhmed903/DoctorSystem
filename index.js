@@ -5,11 +5,16 @@ import morgan from "morgan";
 import connectiondb from "./app/DB/connection-db.js";
 import { v1routes } from "./app/routers-index.js";
 import { constants, sendResponse } from "./app/utils/utills-service.js";
+import cookieParser from "cookie-parser";
+
+
 
 
 
 
 const app=express();
+app.use(cookieParser());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -25,6 +30,7 @@ app.use(
 v1routes(app)
 
 
+
 app.get("/",(req,res)=>{
     res.json({message:"Welcome to Doctor System API"});
 });
@@ -33,6 +39,7 @@ app.get("/",(req,res)=>{
 app.use("/",(req,res)=>{
     res.status(500).json({message:"Route Not Found"});
 });
+
 
 app.use((err, req, res, next) => {
   const statusCode = err.status || constants.RESPONSE_INT_SERVER_ERROR;

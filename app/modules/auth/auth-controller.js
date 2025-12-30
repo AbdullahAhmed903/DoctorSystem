@@ -3,11 +3,13 @@ import CONFIG from "../../../config/config.js";
 import { constants, randomNumber, sendResponse } from "../../utils/utills-service.js";
 import logger from "../../../config/logger.js";
 import patientModel from "../../DB/models/patient-schema.js";
-import {  checkUserType, createNewUser, createVerificationCode, findUserByIdentifier, findVerificationCode, loginUser, validateIdentifier, verifyEmailRole } from "./auth-service.js";
+import {  checkUserType, createVerificationCode, findUserByIdentifier, findVerificationCode, loginUser, validateIdentifier, verifyEmailRole } from "./auth-service.js";
 import { asyncHandler, CustomError } from "../../utils/error-handling.js";
 import Doctor from "../../DB/models/doctor-schema.js";
 import { sendEmail } from "../../utils/emails/email-service.js";
 import verificationModel from "../../DB/models/verification-model.js";
+import { refreshTokenService } from "./authServices/refresh-token-service.js";
+import { createNewUser } from "./authServices/signup-user-service.js";
 
 
 
@@ -147,6 +149,28 @@ const resetPassword=asyncHandler(async(req,res)=>{
 })
 
 
+const refreshToken = asyncHandler(async (req, res) => {
+
+  const refreshToken = req.cookies.refreshToken;
+
+  if (!refreshToken) {
+    throw new CustomError(
+      "No Refresh Token",
+      constants.RESPONSE_BAD_REQUEST
+    );
+  }
+
+  const newAccessToken = refreshTokenService(refreshToken)
+
+  sendResponse(
+    res,
+    constants.RESPONSE_SUCCESS,
+    "New Access Token",
+    { token: newAccessToken }
+  );
+});
+
+
 
 
 export{
@@ -156,5 +180,6 @@ export{
     signUpPatient,
     loginPatient,
     forgetPassword,
-    resetPassword
+    resetPassword,
+    refreshToken
 }

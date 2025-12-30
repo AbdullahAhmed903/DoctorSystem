@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import CONFIG from "../../config/config.js";
+import { v4 as uuidv4 } from 'uuid';
 
 
 const constants={
@@ -65,8 +66,10 @@ const getTokenExpiry = (token) => {
 };
 
 
+const generateUserId = (prefix) => `${prefix}${uuidv4()}`;
 
 
 
 
-export {sendResponse,constants,randomNumber,getTokenExpiry}
+
+export {sendResponse,constants,randomNumber,getTokenExpiry,generateUserId}
