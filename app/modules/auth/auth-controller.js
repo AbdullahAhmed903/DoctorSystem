@@ -3,13 +3,14 @@ import CONFIG from "../../../config/config.js";
 import { constants, randomNumber, sendResponse } from "../../utils/utills-service.js";
 import logger from "../../../config/logger.js";
 import patientModel from "../../DB/models/patient-schema.js";
-import {  checkUserType, createVerificationCode, findUserByIdentifier, findVerificationCode, loginUser, validateIdentifier, verifyEmailRole } from "./auth-service.js";
+import {   loginUser, verifyEmailRole } from "./auth-service.js";
 import { asyncHandler, CustomError } from "../../utils/error-handling.js";
 import Doctor from "../../DB/models/doctor-schema.js";
 import { sendEmail } from "../../utils/emails/email-service.js";
 import verificationModel from "../../DB/models/verification-model.js";
 import { refreshTokenService } from "./authServices/refresh-token-service.js";
 import { createNewUser } from "./authServices/signup-user-service.js";
+import { checkUserType, createVerificationCode, findUserByIdentifier, findVerificationCode, sendUserOtp, validateIdentifier } from "./authServices/update-password-service.js";
 
 
 
@@ -108,8 +109,9 @@ const forgetPassword=asyncHandler(async(req,res)=>{
     const user = await findUserByIdentifier(ModelType, identifierType, identifier);
 
     if (user){
-      const verificationCode=await createVerificationCode(user,userType)      
-      sendEmail({email:user.email,type:"CODE",payload:{name:user.name,verificationCode,codeMessage:"You recently requested to reset your account password"}})
+      const verificationCode=await createVerificationCode(user,userType)   
+      sendUserOtp(identifierType, { email:user.email, name:user.name, verificationCode,phone:user.phone })
+
       return sendResponse(res,constants.RESPONSE_SUCCESS,"code sent to email")
     }
     return sendResponse(res,constants.RESPONSE_NOT_FOUND,"User not found")

@@ -1,5 +1,5 @@
 import CONFIG from "../../config/config.js";
-import tokenSchema from "../modules/auth/token-schema.js";
+import tokenSchema from "../DB/models/token-schema.js";
 import { constants, sendResponse } from "../utils/utills-service.js";
 import jwt from "jsonwebtoken";
 

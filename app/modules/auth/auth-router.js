@@ -2,9 +2,9 @@ import express from 'express';
 
 const router = express.Router();
 import * as authController from "./auth-controller.js";
-import rateLimition from '../../utils/rate-limit.js';
 import { validation } from '../../middlewares/validation.js';
 import * as authValidators from "./auth-validation.js";
+import rateLimition from '../../service/rate-limit.js';
 
 
 // .......... Doctor Auth Routes  .........//

@@ -1,7 +1,7 @@
 import express from "express";
 import auth from "../../middlewares/authentication .js";
 import * as emailUpdateController from "./email-update.controller.js"
-import rateLimition from "../../utils/rate-limit.js";
+import rateLimition from "../../service/rate-limit.js";
 const routers=express.Router();
 
 

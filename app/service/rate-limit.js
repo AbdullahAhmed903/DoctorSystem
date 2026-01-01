@@ -1,5 +1,5 @@
 import rateLimit from "express-rate-limit";
-import { sendResponse } from "./utills-service.js";
+import { sendResponse } from "../utils/utills-service.js";
 
 
 

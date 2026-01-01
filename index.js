@@ -6,6 +6,7 @@ import connectiondb from "./app/DB/connection-db.js";
 import { v1routes } from "./app/routers-index.js";
 import { constants, sendResponse } from "./app/utils/utills-service.js";
 import cookieParser from "cookie-parser";
+import { sendOTP } from "./app/service/twilio-service.js";
 
 
 
@@ -24,7 +25,6 @@ morgan.token('id', (req) => req.id);
 app.use(
   morgan(':id :method :url :status :response-time ms', { stream: logger.stream })
 );
-
 
 
 v1routes(app)

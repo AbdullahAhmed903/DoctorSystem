@@ -1,14 +1,10 @@
 import CONFIG from "../../../config/config.js";
 import jwtGenerator from "../../utils/generate-token.js";
-import { constants, randomNumber, sendResponse } from "../../utils/utills-service.js"
+import { constants, sendResponse } from "../../utils/utills-service.js"
 import bcrypt from 'bcryptjs';
 import logger from "../../../config/logger.js";
-import { asyncHandler, CustomError } from "../../utils/error-handling.js";
-import patientModel from "../../DB/models/patient-schema.js";
-import Doctor from "../../DB/models/doctor-schema.js";
+import {  CustomError } from "../../utils/error-handling.js";
 import { sendEmail } from "../../utils/emails/email-service.js";
-import verificationModel from "../../DB/models/verification-model.js";
-import CryptoJS from "crypto-js";
 
 
 
@@ -83,71 +79,5 @@ export const loginUser=async(req,res,model,role,roleId)=>{
 
 
 
-//.......releated to forget-password..........//
-export const validateIdentifier = (identifier) => {
-  if (!identifier) throw new CustomError("Identifier required", 400);
-  const type = detectIdentifierType(identifier);
-  if (!type) throw new CustomError("Invalid identifier", 400);
-  return type;
-};
-
-const detectIdentifierType =(identifier)=>{
-      const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*\.(com|mail)$/;
-      const phoneRegex =/^[0-9]{10,15}$/;
-    if(emailRegex.test(identifier)) return "email";
-    if(phoneRegex.test(identifier)) return "phone";
-    return null
-}
-
-export const findUserByIdentifier = async (Model, type, value) => {  
-  return Model.findOne({[type]: value, isDeleted: false }).select("-specialization  -experience -certifications -profileImage -gender -availableDays");
-};
-
-
-export const checkUserType={
-  patient:patientModel,
-  doctor:Doctor
-
-}
-
-const checkUserId={
-  doctor:"doctorId",
-  patient:"patientId"
-}
-
-export const createVerificationCode=async(user,userType)=>{
-   let id=checkUserId[userType]   
-    
-  const verificationCode=randomNumber(6);
-    await verificationModel.findOneAndUpdate(
-    { userId: user[id], purpose: "FORGET_PASSWORD" },
-    {
-      code: CryptoJS.HmacSHA512(
-        verificationCode.toString(),
-        CONFIG.VERIFICATION_CODE_SECRET
-      ).toString(CryptoJS.enc.Hex),
-      expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes from now
-    },
-    { upsert: true, new: true } // create if doesn't exist, return new doc
-  );
-
-   return  verificationCode
-}
-
-export const findVerificationCode=async(code,user,userType)=>{
-    let id=checkUserId[userType]    
-    const hashedCode = CryptoJS.HmacSHA512(
-    code.toString(),
-    CONFIG.VERIFICATION_CODE_SECRET
-  ).toString(CryptoJS.enc.Hex);
-
-  const codeRecord = await verificationModel.findOne({
-    userId: user[id],
-    purpose: "FORGET_PASSWORD",
-    code: hashedCode,
-  });
-
-  return codeRecord
-}
 
 

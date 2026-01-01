@@ -3,8 +3,6 @@
 
 export const pagination=(page=1,limit=10)=>{
 
-    // limit is The maximum number of items to display on a single page
-    //skip or offset The number of records to skip before starting the current page's fetch
 
     page = Math.max(parseInt(page), 1);
     limit = Math.min(Math.max(parseInt(limit), 1), 100);

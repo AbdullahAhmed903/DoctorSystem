@@ -3,7 +3,7 @@ import logger from "../../../config/logger.js";
 import redisClient from "../../../config/redis.js";
 import imagekitUploding from "../../utils/image-kit.js";
 import { constants, sendResponse } from "../../utils/utills-service.js";
-import tokenSchema from "../auth/token-schema.js";
+// import tokenSchema from "../auth/token-schema.js";
 import Doctor from "../../DB/models/doctor-schema.js";
 
 
@@ -125,7 +125,7 @@ const deleteProfile = async (req, res) => {
     // Invalidate the Redis cache for this doctor's profile
     const cacheKey = `doctor:${doctorId}`;
     await redisClient.del(cacheKey);
-    await tokenSchema.deleteMany({ doctorId }).lean();
+    // await tokenSchema.deleteMany({ doctorId }).lean();
     logger.info(`🗑️ Cache invalidated for doctorId: ${doctorId} after profile deletion`);
     return sendResponse(res, constants.RESPONSE_SUCCESS, "Doctor profile deleted successfully");
   }
