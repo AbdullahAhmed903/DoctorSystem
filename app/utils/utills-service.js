@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import CONFIG from "../../config/config.js";
 import { v4 as uuidv4 } from 'uuid';
+import redisClient from "../../config/redis.js";
 
 
 const constants={
@@ -67,6 +68,33 @@ const getTokenExpiry = (token) => {
 
 
 const generateUserId = (prefix) => `${prefix}${uuidv4()}`;
+
+
+
+export class CacheService  {
+      constructor(redisClient) {
+    this.redis = redisClient;
+  }
+   buildKey(prefix, id) {
+    return `${prefix}:${id}`;
+  }
+
+  async deleteCache(key) {
+    await this.redis.del(key);
+  }
+
+    async getCache(cashKey){
+         return this.redis.get(cashKey);
+    }
+
+      async setCache(key, value, ttlSeconds = 300) {
+    await this.redis.set(
+      key,
+      JSON.stringify(value),
+      { EX: ttlSeconds }
+    );
+  }
+}
 
 
 

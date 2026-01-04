@@ -3,14 +3,14 @@ import CONFIG from "../../../config/config.js";
 import { constants, randomNumber, sendResponse } from "../../utils/utills-service.js";
 import logger from "../../../config/logger.js";
 import patientModel from "../../DB/models/patient-schema.js";
-import {   loginUser, verifyEmailRole } from "./auth-service.js";
 import { asyncHandler, CustomError } from "../../utils/error-handling.js";
 import Doctor from "../../DB/models/doctor-schema.js";
-import { sendEmail } from "../../utils/emails/email-service.js";
 import verificationModel from "../../DB/models/verification-model.js";
 import { refreshTokenService } from "./authServices/refresh-token-service.js";
 import { createNewUser } from "./authServices/signup-user-service.js";
 import { checkUserType, createVerificationCode, findUserByIdentifier, findVerificationCode, sendUserOtp, validateIdentifier } from "./authServices/update-password-service.js";
+import { loginUser } from "./authServices/login.service.js";
+import { verifyEmailRole } from "./authServices/verify-email-service.js";
 
 
 

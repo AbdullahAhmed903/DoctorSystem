@@ -28,13 +28,13 @@ const clinicSchema= new mongoose.Schema({
     type: String,
     required: true,
     validate: {
-    validator: v => /^[0-9]{10,15}$/.test(v),
+    validator: v => /^\+?[0-9]{10,15}$/.test(v),
     message: v => `${v} is not a valid phone number`
     }
     },
 
-    fee: {
-    feeSign: {
+    fees: {
+    currency: {
         type: String,
         enum: ["$", "€", "£", "¥"],
         default: "$"
@@ -46,7 +46,11 @@ const clinicSchema= new mongoose.Schema({
     }
     },
 
-    isActive: { type: Boolean, default: true },
+    status: {
+    type: String,
+    enum: ["active", "inactive", "closed"],
+    default: "inactive"
+  },
     isDeleted:{type:Boolean,default:false},
 
     weeklySchedule: [
@@ -72,6 +76,7 @@ const clinicSchema= new mongoose.Schema({
         _id:0
     }
     ],
+    
 
 
 },{

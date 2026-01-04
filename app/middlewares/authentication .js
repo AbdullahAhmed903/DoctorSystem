@@ -20,7 +20,7 @@ import jwt from "jsonwebtoken";
                 }
                 else{
                     const token=authHeader.split('Bedo_')[1];
-                    const decoded=jwt.verify(token,CONFIG.JWT_SECRET_KEY);                    
+                    const decoded=jwt.verify(token,CONFIG.JWT_SECRET_KEY);                                        
                     req.user=decoded;
                     
                     if(allowRoles.length&&!allowRoles.includes(decoded.TO)){

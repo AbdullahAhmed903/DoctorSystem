@@ -1,10 +1,9 @@
-import CONFIG from "../../../config/config.js";
-import jwtGenerator from "../../utils/generate-token.js";
-import { constants, sendResponse } from "../../utils/utills-service.js"
+import { sendEmail } from "../../../utils/emails/email-service.js";
+import { CustomError } from "../../../utils/error-handling.js";
+import jwtGenerator from "../../../utils/generate-token.js";
+import { constants, sendResponse } from "../../../utils/utills-service.js";
 import bcrypt from 'bcryptjs';
-import logger from "../../../config/logger.js";
-import {  CustomError } from "../../utils/error-handling.js";
-import { sendEmail } from "../../utils/emails/email-service.js";
+import CONFIG from "../../../../config/config.js";
 
 
 
@@ -13,28 +12,7 @@ import { sendEmail } from "../../utils/emails/email-service.js";
 
 
 
-export const verifyEmailRole=async(roleId,decoded,model,res)=>{
-                
-               if(!decoded ||!decoded[roleId]){
-                        return sendResponse(res,constants.RESPONSE_BAD_REQUEST,"Invalid payload")
-                    }
-                   else{
-                        const updatedUser = await model.findOneAndUpdate(
-                        { [roleId]:decoded[roleId], isEmailVerified: false },
-                        { isEmailVerified: true },
-                        { new: true }
-                        );
 
-                        
-                        if(!updatedUser){
-                        return sendResponse(res,constants.RESPONSE_NOT_FOUND,"User not found or already verified")
-                        }
-                        else{
-                            return sendResponse(res,constants.RESPONSE_SUCCESS,"Email verified successfully")
-                        }
-            }
-
-}
 
 
 export const loginUser=async(req,res,model,role,roleId)=>{
@@ -53,7 +31,7 @@ export const loginUser=async(req,res,model,role,roleId)=>{
             if(!isPasswordCorrect){
             return sendResponse(res,constants.RESPONSE_UNAUTHORIZED,"Invalid credentials")
             }
-                const token=jwtGenerator({[`${role}Id`]: user[`${role}Id`], TO: role },CONFIG.JWT_SECRET_KEY,30,"s");
+                const token=jwtGenerator({[`${role}Id`]: user[`${role}Id`], TO: role },CONFIG.JWT_SECRET_KEY,1,"h");
                 const refreshToken=jwtGenerator({ [`${role}Id`]: user[`${role}Id`], TO: role},CONFIG.JWT_REFRESH_SECRET_KEY,7,"d")
 
 
@@ -76,8 +54,3 @@ export const loginUser=async(req,res,model,role,roleId)=>{
                 }
 
 }
-
-
-
-
-
