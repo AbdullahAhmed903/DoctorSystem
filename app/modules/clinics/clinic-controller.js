@@ -5,6 +5,7 @@ import { asyncHandler, CustomError } from "../../utils/error-handling.js";
 import { sendResponse, constants, randomNumber, CacheService } from "../../utils/utills-service.js";
 import { v4 as uuidv4 } from 'uuid';
 import { checkRequiredFields, ClinicPolicy, createClinic } from "./clinicServices/add-clinic-service.js";
+import { checkExistingClinic, UpdateFields } from "./clinicServices/update-clinic-service.js";
 
     const casheService=new CacheService(redisClient)
 
@@ -58,11 +59,44 @@ const getDoctorClinics=asyncHandler( async(req,res)=>{
 })
 
 
+const getOneClinicById=asyncHandler(async(req,res)=>{
+    const {clinicId}=req.params;
+    
+    const {doctorId}=req.user;
+
+    const checkClinic=await checkExistingClinic({clinicId,doctorId})
+
+    sendResponse(res,constants.RESPONSE_SUCCESS,"Clinic Data :",checkClinic)
+})
+
+
+const updateClinicInfo=asyncHandler(async(req,res)=>{
+        const {clinicId}=req.params;
+        const {doctorId}=req.user
+        const body=req.body
+        const update={}
+        await checkExistingClinic({clinicId,doctorId})
+
+        const clinic=new UpdateFields(clinicModel,body)
+        clinic.updateNormalObject(clinicId,doctorId)
+        clinic.updateArrayFields(clinicId,doctorId)  
+
+        return sendResponse(
+            res,
+            constants.RESPONSE_SUCCESS,
+            "Clinic updated successfully"
+        );
+        
+})
+
+
 
 
 
 
 export { 
     addClinic,
-    getDoctorClinics
+    getDoctorClinics,
+    getOneClinicById,
+    updateClinicInfo
 };

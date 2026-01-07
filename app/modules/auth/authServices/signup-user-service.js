@@ -4,6 +4,8 @@ import { sendEmail } from "../../../utils/emails/email-service.js";
 import { constants, generateUserId } from "../../../utils/utills-service.js";
 import logger from "../../../../config/logger.js";
 import CONFIG from "../../../../config/config.js";
+import { emitUserSignup } from "../../../bullmq/events/user.event.js";
+
 
 
 
@@ -13,15 +15,6 @@ const userPayloadMapper = {
   patient: (savedUser) => ({ patientId: savedUser.patientId })
 };
 
-
-
-
-const sendUserEmail=(req,token,data)=>{
-    const link=`${req.protocol}://${req.headers.host}/api/v1/auth/verifyEmail/${token}`;
-    sendEmail({email:data.email,type:"VERIFY_EMAIL",payload:{email:data.email,name:data.name,link:link}})
-    .then(() => logger.info(`Verification email sent to ${data.email}`))
-    .catch(err => logger.error("Email send error:", err));
-}
 
 
 
@@ -50,9 +43,8 @@ export const createNewUser = async ({ model, data, idPrefix, role, req }) => {
     CONFIG.JWT_EXPIRES_TIME_TYPE
     );
 
-  // Send email
-    sendUserEmail(req,token,data)
-
+  await emitUserSignup({host:req.headers.host,protocol:req.protocol,token,data})
+  
     return {
     status: constants.RESPONSE_CREATED,
     message: "User registered successfully. Please check your email.",

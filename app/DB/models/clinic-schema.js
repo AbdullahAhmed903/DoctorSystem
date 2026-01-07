@@ -73,7 +73,6 @@ const clinicSchema= new mongoose.Schema({
         match: /^([01]\d|2[0-3]):([0-5]\d)$/
     },
         crossMidnight: { type: Boolean, default: false },
-        _id:0
     }
     ],
     

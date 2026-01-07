@@ -61,10 +61,6 @@ const randomNumber=(length)=>{
 
 
 
-const getTokenExpiry = (token) => {
-  const decoded = jwt.verify(token,CONFIG.JWT_SECRET_KEY)
-  console.log(decoded.exp*1000);
-};
 
 
 const generateUserId = (prefix) => `${prefix}${uuidv4()}`;
@@ -100,4 +96,4 @@ export class CacheService  {
 
 
 
-export {sendResponse,constants,randomNumber,getTokenExpiry,generateUserId}
+export {sendResponse,constants,randomNumber,generateUserId}

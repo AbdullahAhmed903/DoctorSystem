@@ -29,5 +29,4 @@ export const changeAppointmentStatus=async(appointmentId,doctorId,model,status)=
             
             return updatedAppointment
 
-
 }

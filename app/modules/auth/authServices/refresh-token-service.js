@@ -25,7 +25,6 @@ export const refreshTokenService=(refreshToken)=>{
     CONFIG.JWT_REFRESH_TIME,
     CONFIG.JWT_REFRESH_TIME_TYPE
     );
-    console.log(newAccessToken);
     
 
     return newAccessToken
