@@ -4,7 +4,7 @@ import clinicModel from "../../DB/models/clinic-schema.js";
 import { asyncHandler, CustomError } from "../../utils/error-handling.js";
 import { sendResponse, constants, randomNumber, CacheService } from "../../utils/utills-service.js";
 import { v4 as uuidv4 } from 'uuid';
-import { checkRequiredFields, ClinicPolicy, createClinic } from "./clinicServices/add-clinic-service.js";
+import { checkRequiredFields, ClinicPolicy, createClinic, generateScheduleKey } from "./clinicServices/add-clinic-service.js";
 import { checkExistingClinic, UpdateFields } from "./clinicServices/update-clinic-service.js";
 
     const casheService=new CacheService(redisClient)
@@ -18,9 +18,17 @@ const addClinic =asyncHandler( async (req, res) => {
 
         await clinicPolicy.checkClinicLimit(doctorId);
         await clinicPolicy.checkUniqueName(doctorId, req.body.name);
+        const scheduleKey =generateScheduleKey(req.body.weeklySchedule);
 
-        const newClinic=await createClinic(req.body,doctorId)
+        const result=await createClinic(req.body,doctorId,scheduleKey)
+        if (!result.success) {
+            if (result.type === "duplicate") {
+                throw new CustomError("A clinic with the same schedule already exists",constants.RESPONSE_CONFLICT)
+            }
+            logger.error("Failed to create clinic:", result.error);
+                throw new CustomError("Failed to create clinic",constants.RESPONSE_BAD_REQUEST)
 
+            }
         const cacheKey=casheService.buildKey("doctorClinics",doctorId)
         try {
             await casheService.deleteCache(cacheKey);
@@ -29,7 +37,7 @@ const addClinic =asyncHandler( async (req, res) => {
             logger.warn("Failed to clear clinics cache:", redisErr);
         }
 
-        return sendResponse(res, constants.RESPONSE_CREATED, "Clinic added successfully", newClinic);
+        return sendResponse(res, constants.RESPONSE_CREATED, "Clinic added successfully", result.clinic);
 }
 )
 

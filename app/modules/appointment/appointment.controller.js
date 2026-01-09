@@ -1,86 +1,74 @@
 import appointmentModel from "../../DB/models/appointment-schema.js";
-import clinicModel from "../../DB/models/clinic-schema.js";
-import Doctor from "../../DB/models/doctor-schema.js";
 import { asyncHandler, CustomError } from "../../utils/error-handling.js";
-import { constants, sendResponse } from "../../utils/utills-service.js";
-
-import { v4 as uuidv4 } from "uuid";
+import { constants, sendResponse, timeToMinutes } from "../../utils/utills-service.js";
 import redisClient from "../../../config/redis.js";
 import logger from "../../../config/logger.js";
 import { pagination } from "../../utils/pagination.js";
 import { appointmentsPipeline, AppointmentStrategyFactory } from "./services/appointments-services.js";
 import { changeAppointmentStatus, STATUS_MESSAGES } from "./services/update-appointment-status.js";
-import { checkClinicsWorkingHours, checkExistClinic, checkExistDoctor, dateValidation, validateBookingInput } from "./services/book-appointment.js";
+import { checkExistClinic, checkExistDoctor, checkPaymentType, checkWorkingDays, checkWorkingHours, dateValidation, validateBookingInput } from "./services/book-appointment.js";
 
 const bookAppointment=asyncHandler(async(req,res)=>{
     const {patientId}=req.user;
     const {clinicId}=req.params
-    const {doctorId,typeOfPayment,reasonForVisit,date,startTime,endTime}=req.body
+    const {doctorId,date,startTime,endTime}=req.body
+    const data=req.body
+    // ---------- 1. VALIDATION ----------  
+    validateBookingInput({doctorId,clinicId,date,startTime,endTime})
 
-     // ---------- 1. VALIDATION ----------
-    if(!doctorId||!clinicId||!date||!startTime||!endTime){
-            throw new CustomError("Missing required fields",constants.RESPONSE_BAD_REQUEST)
+    // ---------- 2. DOCTOR CHECK ----------
+    const doctorData=await checkExistDoctor(doctorId)    
+
+    // ---------- 3. CLINIC CHECK ----------
+    const existClinic=await checkExistClinic(doctorId,clinicId)
+
+    // ---------- 4. DATE VALIDATION ----------
+    if(dateValidation(date)){
+        throw new CustomError("This is a past date,Please select a valid date",constants.RESPONSE_BAD_REQUEST)
     }
-      // ---------- 2. DOCTOR CHECK ----------
-    await checkExistDoctor(doctorId)
-
-        // ---------- 3. CLINIC CHECK ----------
-        const existClinic=await checkExistClinic(doctorId,clinicId)
-
-              // ---------- 4. DATE VALIDATION ----------
-            if(dateValidation(date)){
-                throw new CustomError("This is a past date,Please select a valid date",constants.RESPONSE_BAD_REQUEST)
-            }
             
-             // ---------- 5. CHECK CLINIC WORKING DAY ----------
-          
-            const schedule =checkClinicsWorkingHours(date,existClinic)
-            if(!schedule){
-                throw new CustomError(`Clinic is not open on ${days[dayOfWeek]}`,constants.RESPONSE_BAD_REQUEST)
-            }
+    // ---------- 5. CHECK CLINIC WORKING DAYS ----------
+    
+    const schedule =checkWorkingDays(date,existClinic)
 
-                // ---------- 6. CHECK CLINIC WORKING HOURS ----------
-                if (startTime < schedule.startTime || endTime > schedule.endTime) {
-                    throw new CustomError(`Appointment time must be within clinic hours: ${schedule.startTime} - ${schedule.endTime}`,constants.RESPONSE_BAD_REQUEST)
-                    }
 
-                             // ---------- 7. CHECK TIME CONFLICT ----------
-                            const conflictingAppointment = await appointmentModel.findOne({
-                                doctorId,
-                                clinicId,
-                                date,
-                                $or: [
-                                    { startTime: { $lt: endTime, $gte: startTime } },
-                                    { endTime: { $gt: startTime, $lte: endTime } },
-                                    { $and: [{ startTime: { $lte: startTime } }, { endTime: { $gte: endTime } }] }
-                                ]
-                            }).lean()
+    // ---------- 6. CHECK CLINIC WORKING HOURS ----------
+    const appointmentHours=checkWorkingHours({startTime,endTime,schedule})
 
-                            if(conflictingAppointment){
-                                throw new CustomError("Time slot is already booked",constants.RESPONSE_BAD_REQUEST)
-                            }
+    // ---------- 7. CHECK TIME CONFLICT ----------
+    const appointments = await appointmentModel.find({
+        clinicId,
+        doctorId,
+        date,
+    })
+                                const conflict = appointments.find(app => {
+                                let existingStart = timeToMinutes(app.startTime);
+                                let existingEnd = timeToMinutes(app.endTime);
+
+                                // handle cross-midnight for existing appointment
+                                if (existingEnd <= existingStart) existingEnd += 24 * 60;
+
+                                return (
+                                    (existingStart < appointmentHours.appointmentEnd && existingStart >= appointmentHours.appointmentStart) || // overlaps start
+                                    (existingEnd > appointmentHours.appointmentStart && existingEnd <= appointmentHours.appointmentEnd) ||     // overlaps end
+                                    (existingStart <= appointmentHours.appointmentStart && existingEnd >= appointmentHours.appointmentEnd)    // completely covers
+                                );
+                                });
+
+                                if (conflict) {
+                                throw new CustomError(
+                                    "This appointment time is already booked",
+                                    constants.RESPONSE_BAD_REQUEST
+                                );
+                                }
                                   // ---------- 8. CREATE APPOINTMENT ----------
-
-                                const newAppointment = new appointmentModel({
-                                        appointmentId:uuidv4(),
-                                        doctorId,
-                                        patientId,
-                                        clinicId,
-                                        date,
-                                        startTime,
-                                        endTime,
-                                        status: "pending",
-                                        fees: {
-                                            amount: existClinic.fee.amount,
-                                            currency: existClinic.fee.feeSign
-                                        },
-                                        typeOfPayment: typeOfPayment || "cash",
-                                        reasonForVisit,
-                                        createdBy: "patient"
-                                    });
-
-                                    const savedAppointment=await newAppointment.save();
-
+                                 const result=await checkPaymentType(data,patientId,clinicId,doctorData,existClinic.fees)                                
+                                    const savedAppointment=await result.newAppointment.save();
+                                        if(result.session){
+                                            console.log("gggggggggggggggg");
+                                            
+                                            savedAppointment.session=result.session
+                                        }
                                       return sendResponse(res, constants.RESPONSE_CREATED, "Appointment booked successfully",savedAppointment);
                             
                     
