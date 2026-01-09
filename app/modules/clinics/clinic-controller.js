@@ -1,60 +1,47 @@
 import logger from "../../../config/logger.js";
 import redisClient from "../../../config/redis.js";
 import clinicModel from "../../DB/models/clinic-schema.js";
-import { sendResponse, constants, randomNumber } from "../../utils/utills-service.js";
+import { asyncHandler, CustomError } from "../../utils/error-handling.js";
+import { sendResponse, constants, randomNumber, CacheService } from "../../utils/utills-service.js";
 import { v4 as uuidv4 } from 'uuid';
+import { checkRequiredFields, ClinicPolicy, createClinic } from "./clinicServices/add-clinic-service.js";
+import { checkExistingClinic, UpdateFields } from "./clinicServices/update-clinic-service.js";
 
+    const casheService=new CacheService(redisClient)
 
-const addClinic = async (req, res) => {
-    try {
-        const { name, address, contactNumber, fees, weeklySchedule } = req.body;
+const addClinic =asyncHandler( async (req, res) => {
+        const {doctorId}=req.user   
+        
+        checkRequiredFields(req.body)
 
-        if (!name || !address || !contactNumber) {
-            return sendResponse(res, constants.RESPONSE_BAD_REQUEST, "Name, address, and contactNumber are required");
-        }
+       const clinicPolicy = new ClinicPolicy(clinicModel);
 
-        // Create clinic object
-        const clinicData = {
-            clinicId:uuidv4(),
-            doctorId: req.user.doctorId,
-            name,
-            address,
-            contactNumber,
-            fee: fees || 0,
-            weeklySchedule: weeklySchedule || []
-        };
+        await clinicPolicy.checkClinicLimit(doctorId);
+        await clinicPolicy.checkUniqueName(doctorId, req.body.name);
 
-        // Save clinic
-        const newClinic = await clinicModel.create(clinicData);
+        const newClinic=await createClinic(req.body,doctorId)
 
-        // Invalidate doctor's clinics cache so next read is fresh
-        const cacheKey = `doctorClinics:${req.user.doctorId}`;
+        const cacheKey=casheService.buildKey("doctorClinics",doctorId)
         try {
-            await redisClient.del(cacheKey);
+            await casheService.deleteCache(cacheKey);
             logger.info(`Cleared cache for ${cacheKey} after adding clinic`);
         } catch (redisErr) {
             logger.warn("Failed to clear clinics cache:", redisErr);
-            // don't fail the request if cache removal fails
         }
 
         return sendResponse(res, constants.RESPONSE_CREATED, "Clinic added successfully", newClinic);
-
-    } catch (error) {
-        logger.error("Error adding clinic:", error);
-        return sendResponse(res, constants.RESPONSE_INT_SERVER_ERROR, constants.UNHANDLED_ERROR);
-    }
-};
+}
+)
 
 
 
-const getDoctorClinics=async(req,res)=>{
-    try {
+const getDoctorClinics=asyncHandler( async(req,res)=>{
         const {doctorId}=req.user;
-        console.log(doctorId);
-        
-         const cacheKey = `doctorClinics:${doctorId}`; // unique cache key
 
-        const cachedDoctorClinics = await redisClient.get(cacheKey);
+        const cacheKey=casheService.buildKey("doctorClinics",doctorId)
+        
+        const cachedDoctorClinics =await casheService.getCache(cacheKey)
+        
         if (cachedDoctorClinics) {
             logger.info(`📦 Clinics served from cache for doctorId: ${doctorId}`);
             return sendResponse(
@@ -64,21 +51,52 @@ const getDoctorClinics=async(req,res)=>{
             JSON.parse(cachedDoctorClinics)
             );
         }
-
+        
         const clinics=await clinicModel.find({doctorId:doctorId}).select("-_id -__v -isDeleted")
-        await redisClient.setEx(cacheKey, 600, JSON.stringify(clinics));
+        casheService.setCache(cacheKey,clinics,600)
         
         sendResponse(res,constants.RESPONSE_SUCCESS,"Clinics fetched successfully",clinics)
-    } catch (error) {
-         logger.error("Error getting clinic:", error);
-        return sendResponse(res, constants.RESPONSE_INT_SERVER_ERROR, constants.UNHANDLED_ERROR);
-    }
-}
+})
+
+
+const getOneClinicById=asyncHandler(async(req,res)=>{
+    const {clinicId}=req.params;
+    
+    const {doctorId}=req.user;
+
+    const checkClinic=await checkExistingClinic({clinicId,doctorId})
+
+    sendResponse(res,constants.RESPONSE_SUCCESS,"Clinic Data :",checkClinic)
+})
+
+
+const updateClinicInfo=asyncHandler(async(req,res)=>{
+        const {clinicId}=req.params;
+        const {doctorId}=req.user
+        const body=req.body
+        const update={}
+        await checkExistingClinic({clinicId,doctorId})
+
+        const clinic=new UpdateFields(clinicModel,body)
+        clinic.updateNormalObject(clinicId,doctorId)
+        clinic.updateArrayFields(clinicId,doctorId)  
+
+        return sendResponse(
+            res,
+            constants.RESPONSE_SUCCESS,
+            "Clinic updated successfully"
+        );
+        
+})
+
+
 
 
 
 
 export { 
     addClinic,
-    getDoctorClinics
+    getDoctorClinics,
+    getOneClinicById,
+    updateClinicInfo
 };

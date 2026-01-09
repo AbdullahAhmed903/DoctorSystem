@@ -10,7 +10,8 @@ export const validation=(Schema)=>{
         const validationArr = []
         dataMethod.forEach(key=>{
             if(Schema[key]){
-                const validationResult = Schema[key].validate(req[key], { abortEarly: false }) 
+                
+                const validationResult = Schema[key].validate(req[key], { abortEarly: false, stripUnknown: true }) 
                    if(validationResult?.error){
                 validationArr.push(validationResult.error.details)
                 }
@@ -18,12 +19,11 @@ export const validation=(Schema)=>{
                     req[key] = validationResult.value
                 }
             }
-         
         })
 
-        if(validationArr.length){
-            
+        if(validationArr.length){            
             throw new CustomError("Validation error", constants.RESPONSE_BAD_REQUEST,validationArr.flat())
+            
         }
         else{
             return next()

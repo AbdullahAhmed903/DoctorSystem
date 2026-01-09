@@ -52,8 +52,16 @@ class CONFIG {
     this.DB_CLUSTER = process.env.DB_CLUSTER;
 
     this.BCRYPT_SALT_ROUNDS = process.env.BCRYPT_SALT_ROUNDS || 10;
+
+    //Main Token
     this.JWT_SECRET_KEY = process.env.JWT_SECRET_KEY || "abdullah15466";
+    this.JWT_EXPIRES_TIME=process.env.JWT_EXPIRES_TIME
+    this.JWT_EXPIRES_TIME_TYPE=process.env.JWT_EXPIRES_TIME_TYPE
+
+    //Refresh Token
     this.JWT_REFRESH_SECRET_KEY = process.env.JWT_SECRET_KEY || "abdullah123498778";
+    this.JWT_REFRESH_TIME=process.env.JWT_REFRESH_TIME
+    this.JWT_REFRESH_TIME_TYPE=process.env.JWT_REFRESH_TIME_TYPE ||"m"
 
     this.VERIFICATION_CODE_SECRET=process.env.VERIFICATION_CODE_SECRET
 
@@ -65,6 +73,12 @@ class CONFIG {
     this.IMAGE_KIT_PUBLIC_KEY = process.env.IMAGE_KIT_PUBLIC_KEY;
     this.IMAGE_KIT_PRIVATE_KEY = process.env.IMAGE_KIT_PRIVATE_KEY;
     this.IMAGE_KIT_URL_ENDPOINT = process.env.IMAGE_KIT_URL_ENDPOINT;
+    
+
+    this.TWILIO_ACCOUNT_SID=process.env.TWILIO_ACCOUNT_SID
+    this.TWILIO_AUTH_TOKEN=process.env.TWILIO_AUTH_TOKEN
+    this.TWILIO_PHONE_NUMBER=process.env.TWILIO_PHONE_NUMBER
+
 
     CONFIG.instance = this;
   }

@@ -1,7 +1,7 @@
 import express from "express";
 import * as appointmentRouter from "./appointment.controller.js"
 import auth from "../../middlewares/authentication .js";
-import rateLimition from '../../utils/rate-limit.js';
+import rateLimition from "../../service/rate-limit.js";
 
 const router=express.Router()
 
