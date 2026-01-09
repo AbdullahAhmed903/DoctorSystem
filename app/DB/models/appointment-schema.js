@@ -34,6 +34,8 @@ const appointmentSchema = new mongoose.Schema({
       message: props => `${props.value} Invalid time format. Use HH:MM`
     }
    },
+  //  startMinutes:Number,
+  //  endMinutes:Number,
 
   status: {
     type: String,
@@ -56,12 +58,16 @@ const appointmentSchema = new mongoose.Schema({
   notes: { type: String },
 
   createdBy: { type: String, enum: ["doctor", "patient"] },
+  stripeSessionId:{type:String}
 
 }, { timestamps: true,
     toJSON:{virtuals:true},
     toObject:{virtuals:true}
   });
 
+
+
+  
 appointmentSchema.virtual("clinicDetails",
 {
 ref:"clinics",

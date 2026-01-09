@@ -79,6 +79,8 @@ class CONFIG {
     this.TWILIO_AUTH_TOKEN=process.env.TWILIO_AUTH_TOKEN
     this.TWILIO_PHONE_NUMBER=process.env.TWILIO_PHONE_NUMBER
 
+    this.STRIP_KEY=process.env.STRIP_KEY
+
 
     CONFIG.instance = this;
   }

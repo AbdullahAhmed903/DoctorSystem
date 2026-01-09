@@ -1,6 +1,6 @@
 import clinicModel from "../../../DB/models/clinic-schema.js";
 import { CustomError } from "../../../utils/error-handling.js"
-import { constants } from "../../../utils/utills-service.js"
+import { constants, generateUserId, sendResponse } from "../../../utils/utills-service.js"
 import { v4 as uuidv4 } from 'uuid';
 
 
@@ -63,28 +63,54 @@ export class ClinicPolicy {
       );
     }
   }
+
+
 }
 
 
 
 
+export const  generateScheduleKey=(weeklySchedule)=> {
+  return weeklySchedule
+    .map(s => ({
+      day: s.day,
+      start: s.startTime,
+      end: s.endTime,
+      cross: s.crossMidnight ? 1 : 0
+    }))
+    .sort((a, b) => a.day.localeCompare(b.day))
+    .map(s => `${s.day}-${s.start}-${s.end}-${s.cross}`)
+    .join("|");
+}
 
-export const createClinic=async(data,doctorId)=>{
-        const { name, address, contactNumber, fees, weeklySchedule,status } = data;
-        
-    const clinicData={
-        clinicId:uuidv4(),
-        doctorId,
-        name,
-        address,
-        contactNumber,
-        fees,
-        weeklySchedule,
-        status
-    }
+
+
+export const createClinic = async (data, doctorId, scheduleKey) => {
+  try {
+    const { name, address, contactNumber, fees, weeklySchedule, status } = data;
+
+    const clinicData = {
+      clinicId:generateUserId("Clinic"),
+      doctorId,
+      name,
+      address,
+      contactNumber,
+      fees,
+      weeklySchedule,
+      status,
+      scheduleKey
+    };
 
     const newClinic = await clinicModel.create(clinicData);
 
-    return newClinic
+    return { success: true, clinic: newClinic };
+  } catch (error) {
+    // Check for duplicate scheduleKey
+    if (error.code === 11000 && error.keyPattern && error.keyPattern.scheduleKey) {
+      return { success: false, type: "duplicate" };
+    }
 
-}
+    // Any other error
+    return { success: false, type: "other", error };
+  }
+};

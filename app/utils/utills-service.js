@@ -15,6 +15,7 @@ const constants={
     RESPONSE_FORBIDDEN: 403,
     RESPONSE_INT_SERVER_ERROR: 500,
     RESPONSE_NOT_FOUND: 404,
+    RESPONSE_CONFLICT:409
 }
 
 
@@ -93,7 +94,12 @@ export class CacheService  {
 }
 
 
+const timeToMinutes = (timeStr) => {
+    const [hours, minutes] = timeStr.split(":").map(Number);
+    return hours * 60 + minutes;
+};
 
 
 
-export {sendResponse,constants,randomNumber,generateUserId}
+
+export {sendResponse,constants,randomNumber,generateUserId,timeToMinutes}

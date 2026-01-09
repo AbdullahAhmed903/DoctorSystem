@@ -13,7 +13,8 @@ const clinicSchema= new mongoose.Schema({
     },
     doctorId:{
         type:String,
-        required:true
+        required:true,
+        index:true
     },
     name: { type: String, required: true, trim: true, minlength: 2 },
 
@@ -75,6 +76,13 @@ const clinicSchema= new mongoose.Schema({
         crossMidnight: { type: Boolean, default: false },
     }
     ],
+
+    scheduleKey: {
+    type: String,
+    required: true,
+    unique:true,
+    index:true
+    }
     
 
 
@@ -83,8 +91,12 @@ const clinicSchema= new mongoose.Schema({
 })
 
 
+clinicSchema.index(
+  { doctorId: 1, scheduleKey: 1 },
+  { unique: true }
+);
+
 
 const clinicModel=mongoose.model("clinics",clinicSchema)
-
 
 export default clinicModel
