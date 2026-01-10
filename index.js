@@ -6,10 +6,6 @@ import connectiondb from "./app/DB/connection-db.js";
 import { v1routes } from "./app/routers-index.js";
 import { constants, sendResponse } from "./app/utils/utills-service.js";
 import cookieParser from "cookie-parser";
-import { sendOTP } from "./app/service/twilio-service.js";
-
-
-
 
 
 
@@ -69,6 +65,10 @@ app.use((err, req, res, next) => {
   }
 });
 
+if(CONFIG.NODE_ENV==="development"){
 app.listen(CONFIG.PORT,()=>{
    logger.info(`Server running on port ${CONFIG.PORT}`);
 });
+}
+
+export default app
