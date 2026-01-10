@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import CONFIG from "../../config/config.js";
 import { v4 as uuidv4 } from 'uuid';
-import redisClient from "../../config/redis.js";
+// import redisClient from "../../config/redis.js";
 
 
 const constants={
