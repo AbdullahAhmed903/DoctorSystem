@@ -2,22 +2,40 @@ import express from "express";
 import CONFIG from "./config/config.js";
 import logger from "./config/logger.js";
 import morgan from "morgan";
-import cookieParser from "cookie-parser";
-import connectDB from "./app/DB/connection-db.js";
 import { v1routes } from "./app/routers-index.js";
 import { constants, sendResponse } from "./app/utils/utills-service.js";
+import cookieParser from "cookie-parser";
+import connectDB from "./app/DB/connection-db.js";
+import cors from "cors"
+
+
 
 const app = express();
+
+const corsConfig={
+  origin:"*",
+  Credential:true,
+  methods:["GET","POST","PUT","DELETE"]
+}
+
+const app=express();
 
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cors(corsConfig))
+connectDB()
+morgan.token('id', (req) => req.id);
+app.use(
+  morgan(':id :method :url :status :response-time ms', { stream: logger.stream })
+);
+
+
+v1routes(app)
+
 
 // ✅ DB connection (serverless-safe)
-app.use(async (req, res, next) => {
-  await connectDB();
-  next();
-});
+
 
 // ✅ Logging
 morgan.token("id", (req) => req.id || "anon");
