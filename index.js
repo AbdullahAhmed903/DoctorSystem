@@ -5,8 +5,8 @@ import morgan from "morgan";
 import { v1routes } from "./app/routers-index.js";
 import { constants, sendResponse } from "./app/utils/utills-service.js";
 import cookieParser from "cookie-parser";
-import connectDB from "./app/DB/connection-db.js";
 import cors from "cors"
+import connectiondb from "./app/DB/connection-db.js";
 
 
 
@@ -17,12 +17,13 @@ const corsConfig={
 }
 
 const app=express();
+app.set('trust proxy', 1);
 app.use(cookieParser());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsConfig))
-connectDB()
+new connectiondb()
 morgan.token('id', (req) => req.id);
 app.use(
   morgan(':id :method :url :status :response-time ms', { stream: logger.stream })

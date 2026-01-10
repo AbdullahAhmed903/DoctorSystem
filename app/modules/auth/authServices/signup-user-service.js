@@ -4,7 +4,7 @@ import { sendEmail } from "../../../utils/emails/email-service.js";
 import { constants, generateUserId } from "../../../utils/utills-service.js";
 import logger from "../../../../config/logger.js";
 import CONFIG from "../../../../config/config.js";
-import { emitUserSignup } from "../../../bullmq/events/user.event.js";
+// import { emitUserSignup } from "../../../bullmq/events/user.event.js";
 
 
 

@@ -26,10 +26,10 @@ const getDoctorProfile = async (req, res) => {
         res,
         constants.RESPONSE_SUCCESS,
         "Doctor profile fetched successfully (from cache)",
-        JSON.parse(cachedProfile)
+        cachedProfile
       );
     }
-
+        
     // 2️⃣ Fetch from MongoDB if not cached
     const doctorProfile = await Doctor.findOne({ doctorId })
       .select("-_id -__v -password -isEmailVerified -isDeleted")
@@ -40,7 +40,7 @@ const getDoctorProfile = async (req, res) => {
     }
 
     // 3️⃣ Store result in Redis for 10 minutes (600 seconds)
-    await redisClient.setEx(cacheKey, 600, JSON.stringify(doctorProfile));
+    await redisClient.set(cacheKey,JSON.stringify(doctorProfile),{ex:600});
 
     logger.info(`💾 Profile cached for doctorId: ${doctorId}`);
     return sendResponse(res, constants.RESPONSE_SUCCESS, "Doctor profile fetched successfully", doctorProfile);
