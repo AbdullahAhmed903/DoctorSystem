@@ -30,7 +30,7 @@ class connectiondb {
 
   async connect() {
     try {
-      await mongoose.connect(`${dbConfig.url}`);
+      await mongoose.connect('mongodb+srv://DoctorSystem:01090524452@cluster0.fjnrf7u.mongodb.net/doctorsystem');
       console.log("✅ Connected to the database!");
     } catch (err) {
       console.error("❌ Cannot connect to the database!", err);
