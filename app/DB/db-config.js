@@ -7,4 +7,5 @@ const dbName=CONFIG.DB_NAME;
 
 const url=`mongodb+srv://${userName}:${password}@${cluster}.mongodb.net/${dbName}?retryWrites=true&w=majority`;
 
+
 export default {url};
