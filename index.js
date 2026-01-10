@@ -8,10 +8,6 @@ import cookieParser from "cookie-parser";
 import connectDB from "./app/DB/connection-db.js";
 import cors from "cors"
 
-
-
-const app = express();
-
 const corsConfig={
   origin:"*",
   Credential:true,
@@ -85,11 +81,6 @@ app.use((err, req, res, next) => {
   }
 });
 
-if(CONFIG.NODE_ENV==="development"){
-app.listen(CONFIG.PORT,()=>{
-   logger.info(`Server running on port ${CONFIG.PORT}`);
-});
-}
 
 export default app
 
