@@ -46,6 +46,8 @@ class CONFIG {
     this.BASEURL = process.env.BASEURL || '/api/v1';
     this.LOG_FILE_LOCATION = process.env.LOG_FILE_LOCATION || './logs/doctor-system.log';
 
+    this.VERCEL=process.env.VERCEL
+
     this.DB_USERNAME = process.env.DB_NAME || "..";
     this.DB_NAME = process.env.DB_USER;
     this.DB_PASSWORD = process.env.DB_PASSWORD;

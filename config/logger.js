@@ -1,4 +1,4 @@
-import winston, { createLogger, format, transports } from "winston";
+import { createLogger, format, transports } from "winston";
 import CONFIG from "./config.js";
 
 /* ---------- Console Format ---------- */
@@ -34,8 +34,14 @@ loggerTransports.push(
   })
 );
 
-/* ✅ File logging ONLY in local development */
-if (CONFIG.NODE_ENV === "development") {
+/** * ✅ Vercel-Safe File Logging 
+ * We check two things:
+ * 1. Are we in development?
+ * 2. Are we NOT on Vercel? (process.env.VERCEL is only true on their servers)
+ */
+const isVercel = process.env.VERCEL === "1" || !!process.env.VERCEL;
+
+if (CONFIG.NODE_ENV === "development" && !isVercel) {
   loggerTransports.push(
     new transports.File({
       filename: CONFIG.LOG_FILE_LOCATION || "doctor-system.log",
