@@ -67,5 +67,11 @@ app.use((err, req, res, next) => {
   }
 });
 
-// ❌ NO app.listen
-export default app;
+if(CONFIG.NODE_ENV==="development"){
+app.listen(CONFIG.PORT,()=>{
+   logger.info(`Server running on port ${CONFIG.PORT}`);
+});
+}
+
+export default app
+
