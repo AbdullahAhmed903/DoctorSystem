@@ -10,6 +10,8 @@ import cors from "cors"
 
 
 
+const app = express();
+
 const corsConfig={
   origin:"*",
   Credential:true,
@@ -17,8 +19,8 @@ const corsConfig={
 }
 
 const app=express();
-app.use(cookieParser());
 
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsConfig))
@@ -32,17 +34,29 @@ app.use(
 v1routes(app)
 
 
+// ✅ DB connection (serverless-safe)
 
-app.get("/",(req,res)=>{
-    res.json({message:"Welcome to Doctor System API"});
+
+// ✅ Logging
+morgan.token("id", (req) => req.id || "anon");
+app.use(morgan(":id :method :url :status :response-time ms", {
+  stream: logger.stream,
+}));
+
+// ✅ Health check
+app.get("/", (req, res) => {
+  res.json({ message: "Doctor System API running 🚀" });
 });
 
+// ✅ Routes
+v1routes(app);
 
-app.use("/",(req,res)=>{
-    res.status(500).json({message:"Route Not Found"});
+// ✅ 404
+app.use((req, res) => {
+  res.status(404).json({ message: "Route Not Found" });
 });
 
-
+// ✅ Error handler
 app.use((err, req, res, next) => {
   const statusCode = err.status || constants.RESPONSE_INT_SERVER_ERROR;
   
@@ -78,3 +92,4 @@ app.listen(CONFIG.PORT,()=>{
 }
 
 export default app
+
