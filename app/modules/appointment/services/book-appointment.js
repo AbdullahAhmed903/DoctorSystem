@@ -135,7 +135,7 @@ const paymentTypesService = {
   card: async ({patientId, clinicId,doctorId, date, startTime, endTime, reasonForVisit,doctorName,appointmentPrice }) => {
     const patientData=await patientModel.findOne({patientId}).select("email name").lean()
     const appointmentId=uuidv4()
-    const session =await createCheckoutSession({customerEmail:patientData.email,doctorName,appointmentId,price:appointmentPrice,metadata:`Hello you are going to pay for Book appointment`})
+    const session =await createCheckoutSession({customerEmail:patientData.email,doctorName,appointmentId,price:appointmentPrice})
     console.log(session);
     
     const newAppointment = new appointmentModel({

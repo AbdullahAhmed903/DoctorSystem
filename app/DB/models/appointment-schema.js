@@ -54,6 +54,12 @@ const appointmentSchema = new mongoose.Schema({
     default: "cash"
   },
 
+  paymentStatus:{
+    type:String,
+    enum:["pending","paid","failed"],
+    default:"pending"
+  },
+
   reasonForVisit: { type: String },
   notes: { type: String },
 

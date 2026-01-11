@@ -7,7 +7,7 @@ export async function createCheckoutSession({
   appointmentId,
   price,
   metadata = {},
-  currency = "usd", // make it dynamic
+  currency = "egp", // make it dynamic
 }) {
   if (!customerEmail || !doctorName || !appointmentId || !price) {
     throw new CustomError("Missing required payment data", 400);

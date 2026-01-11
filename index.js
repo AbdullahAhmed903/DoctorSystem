@@ -15,11 +15,18 @@ const corsConfig={
   Credential:true,
   methods:["GET","POST","PUT","DELETE"]
 }
-
 const app=express();
 app.set('trust proxy', 1);
 app.use(cookieParser());
-
+app.use((req, res, next) => {
+  if(req.originalUrl=="/api/v1/appointment/webhook"){
+    next()
+  }
+  else{
+    express.json()(req, res, next);
+  }
+  
+})
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsConfig))

@@ -7,6 +7,8 @@ import { pagination } from "../../utils/pagination.js";
 import { appointmentsPipeline, AppointmentStrategyFactory } from "./services/appointments-services.js";
 import { changeAppointmentStatus, STATUS_MESSAGES } from "./services/update-appointment-status.js";
 import { checkExistClinic, checkExistDoctor, checkPaymentType, checkWorkingDays, checkWorkingHours, dateValidation, validateBookingInput } from "./services/book-appointment.js";
+import Stripe from "stripe";
+import CONFIG from "../../../config/config.js"
 
 const bookAppointment=asyncHandler(async(req,res)=>{
     const {patientId}=req.user;
@@ -122,8 +124,61 @@ const appointmentsHandler=(role)=>{
 
 
 
+ const webHook=asyncHandler(async(req,res)=>{
+    let event = req.body;
+    console.log("ggggggggggggggggggggggggggggggggggggggggggggggggggggg");
+    
+    const endpointSecret="whsec_tVlkCQprZ6LJzYPyIHSrGr1JQlqzTgGq"
+    const strip=new Stripe(CONFIG.STRIP_KEY)
+    if(endpointSecret){
+        console.log("gggggggggg555");
+        
+    const signature = req.headers['stripe-signature'];
+        try {
+      event = strip.webhooks.constructEvent(
+        req.body,
+        signature,
+        endpointSecret
+      );
+    } catch (err) {
+      console.log(`⚠️  Webhook signature verification failed.`, err.message);
+      return res.sendStatus(400);
+    }
+    }
+    const {appointmentId}=event.data.object.metadata
+    console.log(event.data);
+    
+    console.log(appointmentId);
+    
+ if(event.type==="checkout.session.completed"){
+    await appointmentModel.updateOne({appointmentId},{
+        paymentStatus:"paid"
+    })
+ }
+ else if(event.type==="checkout.session.expired"){
+    await appointmentModel.updateOne({appointmentId},{
+        paymentStatus:"failed"
+    })
+ }
+ else if(event.type==="payment_intent.payment_failed"){
+    await appointmentModel.updateOne({appointmentId},{
+        paymentStatus:"failed"
+    })
+ }
+ else if(event.type==="payment_intent.succeeded"){
+    await appointmentModel.updateOne({appointmentId},{
+        paymentStatus:"paid"
+    })
+ }
+ else{
+    console.log("Unhandled event type:", event.type);
+ }
+sendResponse(res,constants.RESPONSE_SUCCESS,"Webhook handled successfully",{});
+})
+
 export{
     bookAppointment,
     updateAppointmentStatus,
-    appointmentsHandler
+    appointmentsHandler,
+    webHook
 }
