@@ -8,8 +8,6 @@ import cookieParser from "cookie-parser";
 import cors from "cors"
 import connectiondb from "./app/DB/connection-db.js";
 
-
-
 const corsConfig={
   origin:"*",
   Credential:true,
@@ -40,17 +38,29 @@ app.use(
 v1routes(app)
 
 
+// ✅ DB connection (serverless-safe)
 
-app.get("/",(req,res)=>{
-    res.json({message:"Welcome to Doctor System API"});
+
+// ✅ Logging
+morgan.token("id", (req) => req.id || "anon");
+app.use(morgan(":id :method :url :status :response-time ms", {
+  stream: logger.stream,
+}));
+
+// ✅ Health check
+app.get("/", (req, res) => {
+  res.json({ message: "Doctor System API running 🚀" });
 });
 
+// ✅ Routes
+v1routes(app);
 
-app.use("/",(req,res)=>{
-    res.status(500).json({message:"Route Not Found"});
+// ✅ 404
+app.use((req, res) => {
+  res.status(404).json({ message: "Route Not Found" });
 });
 
-
+// ✅ Error handler
 app.use((err, req, res, next) => {
   const statusCode = err.status || constants.RESPONSE_INT_SERVER_ERROR;
   
@@ -79,10 +89,6 @@ app.use((err, req, res, next) => {
   }
 });
 
-if(CONFIG.NODE_ENV==="development"){
-app.listen(CONFIG.PORT,()=>{
-   logger.info(`Server running on port ${CONFIG.PORT}`);
-});
-}
 
 export default app
+
