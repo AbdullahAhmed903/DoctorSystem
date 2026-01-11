@@ -14,6 +14,8 @@ router.get("/patient/appointments",auth(["patient"]),appointmentRouter.appointme
 
 router.patch("/doctor/update-appointment-status/:appointmentId",auth(["doctor"]),appointmentRouter.updateAppointmentStatus)
 
+router.post("/webhook",express.raw({type:'application/json'}),appointmentRouter.webHook)
+
 
 
 
