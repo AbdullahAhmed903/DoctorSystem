@@ -15,8 +15,7 @@ router.post("/doctor/login",rateLimition(10,10),authController.loginDoctor);
 
 // .......... Patient Auth Routes  .........//
 
-router.post("/patient/signup",rateLimition(10,5),authController.signUpPatient)
-
+router.post("/patient/signup",rateLimition(10,5),authController.signUpPatient);
 router.post("/patient/login",rateLimition(10,5),authController.loginPatient)
 
 router.post("/forget-password",rateLimition(5,5),authController.forgetPassword)

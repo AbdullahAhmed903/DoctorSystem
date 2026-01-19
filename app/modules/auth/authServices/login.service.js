@@ -4,6 +4,7 @@ import jwtGenerator from "../../../utils/generate-token.js";
 import { constants, sendResponse } from "../../../utils/utills-service.js";
 import bcrypt from 'bcryptjs';
 import CONFIG from "../../../../config/config.js";
+import logger from "../../../../config/logger.js";
 
 
 

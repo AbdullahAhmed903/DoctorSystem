@@ -1,6 +1,6 @@
 import { Queue } from "bullmq";
 import { queueRedis } from "../queue-redis.js";
 
-export const emailQueue = new Queue("emailQueue", {
+export const stripeQueue = new Queue("stripe-events", {
   connection: queueRedis
 });

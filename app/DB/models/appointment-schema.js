@@ -45,7 +45,7 @@ const appointmentSchema = new mongoose.Schema({
 
   fees: {
     amount: { type: Number, default: 0 },
-    currency: { type: String, default: "$" }
+    currency: { type: String, default: "egp" }
   },
 
   typeOfPayment: {

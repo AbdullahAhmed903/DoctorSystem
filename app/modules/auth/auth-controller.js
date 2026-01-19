@@ -72,8 +72,7 @@ const loginDoctor=async(req,res,next)=>{
 
 
 
-const signUpPatient = async (req, res) => {
-  try {
+const signUpPatient =asyncHandler( async (req, res) => {
     const response = await createNewUser({
       model: patientModel,
       data: req.body,
@@ -84,11 +83,9 @@ const signUpPatient = async (req, res) => {
 
     return sendResponse(res, response.status, response.message);
 
-  } catch (err) {
-    logger.error("Signup error:", err);
-    return sendResponse(res, 500, "Internal Server Error");
-  }
-};
+  
+}
+)
 
 
 

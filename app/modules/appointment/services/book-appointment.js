@@ -132,12 +132,10 @@ const paymentTypesService = {
      return {newAppointment};
   },
 
-  card: async ({patientId, clinicId,doctorId, date, startTime, endTime, reasonForVisit,doctorName,appointmentPrice }) => {
+  card: async ({patientId, clinicId,doctorId, date, startTime, endTime, reasonForVisit,doctorName,appointmentPrice,appointmentCurrency }) => {
     const patientData=await patientModel.findOne({patientId}).select("email name").lean()
-    const appointmentId=uuidv4()
-    const session =await createCheckoutSession({customerEmail:patientData.email,doctorName,appointmentId,price:appointmentPrice})
-    console.log(session);
-    
+    const appointmentId=generateUserId("appointment")
+    const session =await createCheckoutSession({customerEmail:patientData.email,doctorName,appointmentId,price:appointmentPrice,currency:appointmentCurrency})    
     const newAppointment = new appointmentModel({
       appointmentId,
       doctorId,
@@ -148,6 +146,10 @@ const paymentTypesService = {
       endTime,
       status: "pending",
       typeOfPayment: "credit_card",
+          fees: {
+              amount: appointmentPrice,
+              currency: appointmentCurrency
+          },
       reasonForVisit,
       createdBy: "patient",
       stripeSessionId: session.id

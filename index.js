@@ -7,7 +7,8 @@ import { constants, sendResponse } from "./app/utils/utills-service.js";
 import cookieParser from "cookie-parser";
 import cors from "cors"
 import connectiondb from "./app/DB/connection-db.js";
-
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./app/swagger/swagger.js";
 
 
 const corsConfig={
@@ -27,7 +28,6 @@ app.use((req, res, next) => {
   }
   
 })
-app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsConfig))
 new connectiondb()
@@ -36,7 +36,7 @@ app.use(
   morgan(':id :method :url :status :response-time ms', { stream: logger.stream })
 );
 
-
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 v1routes(app)
 
 

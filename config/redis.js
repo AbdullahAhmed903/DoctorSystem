@@ -1,12 +1,13 @@
 
-import CONFIG from "./config.js";
 import logger from "./logger.js";
 import { Redis } from "@upstash/redis";
 
 const redisClient = new Redis({
-  url: CONFIG.UPSTASH_REDIS_REST_URL,
-  token: CONFIG.UPSTASH_REDIS_REST_TOKEN,
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
+
+console.log(process.env.UPSTASH_REDIS_REST_URL);
 
 // optional health log (safe – no connection opened)
 (async () => {
