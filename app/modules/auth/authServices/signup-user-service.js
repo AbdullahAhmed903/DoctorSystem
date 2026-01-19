@@ -4,6 +4,7 @@ import { sendEmail } from "../../../utils/emails/email-service.js";
 import { constants, generateUserId } from "../../../utils/utills-service.js";
 import logger from "../../../../config/logger.js";
 import CONFIG from "../../../../config/config.js";
+import { emitUserSignup } from "../../../bullmq/events/user.event.js";
 // import { emitUserSignup } from "../../../bullmq/events/user.event.js";
 
 
@@ -29,8 +30,10 @@ export const createNewUser = async ({ model, data, idPrefix, role, req }) => {
 
   // Add dynamic ID (doctorId, patientId)
   data[`${role}Id`] = generateUserId(idPrefix)
-
+  
   const newUser = new model(data);
+
+  
   const savedUser = await newUser.save();
   
     

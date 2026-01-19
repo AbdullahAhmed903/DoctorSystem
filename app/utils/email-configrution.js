@@ -3,7 +3,6 @@ import CONFIG from '../../config/config.js';
 
 
 
-
 const SEND_EMAIL_BY_NODEMAILER = async (
     dest,
     subject,
@@ -13,8 +12,8 @@ const SEND_EMAIL_BY_NODEMAILER = async (
         const transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {
-                user: CONFIG.NODEMAILER_EMAIL_FROM,
-                pass: CONFIG.NODEMAILER_API_KEY,
+                user:"abdullahahmed02000@gmail.com",
+                pass:"dubglohvbxlepfga",
             },
         });
         // send mail with defined transport object
