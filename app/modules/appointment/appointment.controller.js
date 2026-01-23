@@ -145,7 +145,7 @@ const webHook = asyncHandler(async (req, res) => {
 
   const {appointmentId} =event.data.object.metadata;
   const {email,name} = event.data.object.customer_details;
-  console.log(event.data.object.customer_details);
+  console.log(event.data);
   
 
   if (!appointmentId) {
