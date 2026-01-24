@@ -5,24 +5,26 @@ import morgan from "morgan";
 import { v1routes } from "./app/routers-index.js";
 import { constants, sendResponse } from "./app/utils/utills-service.js";
 import cookieParser from "cookie-parser";
-import cors from "cors"
+import cors from "cors";
 import connectiondb from "./app/DB/connection-db.js";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./app/swagger/swagger.js";
 import path from "path";
 
+// ================== APP ==================
+const app = express();
+app.set("trust proxy", 1);
 
-
+// ================== CORS ==================
 const corsConfig = {
-  origin: "*", 
+  origin: "*",
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
 };
 
-const app = express();
+app.use(cors(corsConfig));
 
-app.set('trust proxy', 1);
-
+// ================== MIDDLEWARES ==================
 app.use(cookieParser());
 
 app.use((req, res, next) => {
@@ -34,83 +36,68 @@ app.use((req, res, next) => {
 });
 
 app.use(express.urlencoded({ extended: true }));
-app.use(cors(corsConfig));
 
+// ================== DB ==================
 new connectiondb();
 
-morgan.token('id', (req) => req.id);
+// ================== LOGGER ==================
+morgan.token("id", (req) => req.id);
 app.use(
-  morgan(':id :method :url :status :response-time ms', { stream: logger.stream })
+  morgan(":id :method :url :status :response-time ms", {
+    stream: logger.stream,
+  })
 );
 
+// ================== SWAGGER JSON ==================
 app.get("/swagger.json", (req, res) => {
   res.json(swaggerSpec);
 });
 
-if(CONFIG.NODE_ENV==="development"){
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// ================== SWAGGER UI ==================
+if (CONFIG.NODE_ENV === "development") {
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+} else {
+  app.use(
+    "/api-docs",
+    express.static(path.join(process.cwd(), "public/swagger-ui"))
+  );
 }
-else{
-app.use("/api-docs", express.static(path.join(process.cwd(), "public/swagger-ui")));
-}
 
-
-
-
+// ================== ROUTES ==================
 v1routes(app);
 
-
-// ✅ DB connection (serverless-safe)
-
-
-// ✅ Logging
-morgan.token("id", (req) => req.id || "anon");
-app.use(morgan(":id :method :url :status :response-time ms", {
-  stream: logger.stream,
-}));
-
-// ✅ Health check
+// ================== ROOT ==================
 app.get("/", (req, res) => {
-  res.json({ message: "Doctor System API running 🚀" });
+  res.json({ message: "Welcome to Doctor System API" });
 });
 
-// ✅ Routes
-v1routes(app);
-
-// ✅ 404
+// ================== 404 ==================
 app.use((req, res) => {
   res.status(404).json({ message: "Route Not Found" });
 });
 
-// ✅ Error handler
+// ================== ERROR HANDLER ==================
 app.use((err, req, res, next) => {
   const statusCode = err.status || constants.RESPONSE_INT_SERVER_ERROR;
-  
-  if (CONFIG.NODE_ENV === "development") {
-    if(err.message==="Validation error")
-      {
-           sendResponse(res, statusCode, err.message, {},err.errorDetails, err.stack);
-           console.log(err.errorDetails);
-           logger.error(
-            `${statusCode} - ${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}\n${err.stack}`
-          )
-           
-      }
-      else{
-            sendResponse(res, statusCode, err.message, {}, err.stack);
-          logger.error(
-            `${statusCode} - ${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}\n${err.stack}`
-          )
-      }
-      
 
+  if (CONFIG.NODE_ENV === "development") {
+    sendResponse(res, statusCode, err.message, {}, err.stack);
+    logger.error(
+      `${statusCode} - ${err.message} - ${req.originalUrl} - ${req.method}`
+    );
   } else {
-    // Production: no stack trace
     sendResponse(res, statusCode, err.message);
-    logger.error(`${statusCode} - ${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}`);
+    logger.error(
+      `${statusCode} - ${err.message} - ${req.originalUrl} - ${req.method}`
+    );
   }
 });
 
+// ================== LISTEN (LOCAL ONLY) ==================
+if (CONFIG.NODE_ENV === "development") {
+  app.listen(CONFIG.PORT, () => {
+    logger.info(`Server running on port ${CONFIG.PORT}`);
+  });
+}
 
-export default app
-
+export default app;
