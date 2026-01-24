@@ -46,7 +46,7 @@ export const loginUser=async(req,res,model,role)=>{
                 else{
                     res.cookie('refreshToken', refreshToken, {
                       httpOnly: true,
-                      secure: false,
+                      secure: CONFIG.NODE_ENV === 'production'? true : false,
                       sameSite: 'strict',
                       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
                     });
