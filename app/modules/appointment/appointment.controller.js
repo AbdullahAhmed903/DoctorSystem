@@ -173,6 +173,7 @@ const webHook = asyncHandler(async (req, res) => {
       { appointmentId,paymentStatus: "pending" },
       { paymentStatus: "paid",paymentIntentId:paymentIntentId }
     );    
+
     await emitUserpaymentSuccess({email,name,appointmentId})
   }
 
