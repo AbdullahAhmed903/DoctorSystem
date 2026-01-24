@@ -7,8 +7,6 @@ const redisClient = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
-console.log(process.env.UPSTASH_REDIS_REST_URL);
-
 // optional health log (safe – no connection opened)
 (async () => {
   try {

@@ -37,8 +37,8 @@ const clinicSchema= new mongoose.Schema({
     fees: {
     currency: {
         type: String,
-        enum: ["$", "€", "£", "¥"],
-        default: "$"
+        enum: ["$", "€", "£", "¥","egp"],
+        default: "egp"
     },
     amount: {
         type: Number,

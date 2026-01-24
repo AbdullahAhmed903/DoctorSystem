@@ -1,4 +1,4 @@
-import { CustomError } from "../../../utils/error-handling.js";
+import { CustomError } from "../../../middlewares/error-handling.js";
 import { constants } from "../../../utils/utills-service.js";
 
 

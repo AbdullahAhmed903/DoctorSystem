@@ -1,5 +1,6 @@
-import dotenv from 'dotenv';
-dotenv.config();
+import 'dotenv/config';
+import mongoose from "mongoose";
+await mongoose.connect(dbConfig.url);
 import { Worker } from "bullmq";
 import logger from "../../../config/logger.js";
 import { sendEmail } from "../../utils/emails/email-service.js";
@@ -7,6 +8,11 @@ import appointmentModel from "../../DB/models/appointment-schema.js";
 import invoiceModel from "../../DB/models/invoice-schema.js";
 import { generateInvoiceNumber } from "../../utils/utills-service.js";
 import { queueRedis } from "../queue-redis.js";
+import {generateInvoicePDFBuffer, uploadInvoiceBufferToImageKit } from "../../service/invoicePdf-service.js";
+import Doctor from "../../DB/models/doctor-schema.js";
+import patientModel from "../../DB/models/patient-schema.js";
+import dbConfig from '../../DB/db-config.js';
+import Stripe from 'stripe';
 
 
 new Worker(
@@ -20,7 +26,7 @@ new Worker(
         logger.info(`✅ Verification email sent to ${data.email}`);
       } catch (err) {
         logger.error("❌ Email send error:", err);
-        throw err; // BullMQ will retry automatically
+        throw err; 
       }
     }
   },
@@ -31,47 +37,104 @@ new Worker(
 new Worker(
   "stripe-events",
   async (job) => {
-    console.log("inside stripe worker");
-    
-    if (job.name === "SEND_PAYMENT_SUCCESS_EMAIL") {
-      console.log("ggggggggggggggggggggg");
+    try {
+      if (job.name !== "SEND_PAYMENT_SUCCESS_EMAIL") return;
+      const { email, name, appointmentId } = job.data;
+      const appointment = await appointmentModel.findOne({ appointmentId });
+      if (!appointment) {
+        logger.error(`❌ Appointment not found: ${appointmentId}`);
+        return;
+      }
+
+      const doctorData = await Doctor
+        .findOne({doctorId:appointment.doctorId})
+        .select("email name");
+
+      const patientData = await patientModel
+        .findOne({patientId:appointment.patientId})
+        .select("email name");
+
+
+      let invoice = await invoiceModel.findOne({ appointmentId });
+
+      if (!invoice) {
+        invoice = await invoiceModel.create({
+          invoiceNumber: generateInvoiceNumber(),
+          appointmentId,
+          userId: appointment.patientId,
+          amount: appointment.fees.amount,
+          currency: appointment.fees.currency,
+          paymentMethod: "Stripe",
+          status: "Paid",
+          doctorName: doctorData.name,
+        });
+      }
+
+
+  const pdfBuffer = await generateInvoicePDFBuffer(invoice, appointment, doctorData.name, patientData.name,patientData.email);
+
+      const invoiceUrl = await uploadInvoiceBufferToImageKit(pdfBuffer, `invoice-${invoice.invoiceNumber}.pdf`);
+      await invoiceModel.updateOne(
+        { appointmentId,invoiceNumber:invoice.invoiceNumber },
+        { $set: { invoiceUrl } }
+      );
+      console.log(invoiceUrl);
       
-      const { email,name,appointmentId } = job.data;
-      const appointment = await appointmentModel.findOne({ appointmentId }).populate("doctorDetails clinicDetails");
-      console.log(appointment);
-      
-       if (!appointment) {
-      logger.error(`❌ Appointment not found: ${appointmentId}`);
-      return;
-    }
-       const existingInvoice = await invoiceModel.findOne({ appointmentId });
-        let invoice
-       if(!existingInvoice){
-        invoice=new invoiceModel({
-        invoiceNumber:generateInvoiceNumber(),
-        appointmentId:appointmentId,
-        userId:data.patientId,
-        amount:data.fees.amount,
-        currency:data.fees.currency,
-        paymentMethod:"Stripe",
-        status:"Paid",
+      await sendEmail({
+        email,
+        type: "PAYMENT_SUCCESS",
+        payload: { email, name,invoiceUrl },
       });
-        await invoice.save();
-       }
-        const { filePath, fileName } = await generateInvoicePDF(
-    invoice,
-    appointment,
-    appointment.patientId
-    );
-      try {
-        await sendEmail({email:email,type:"PAYMENT_SUCCESS",payload:{email,name},attachments:[{filename:fileName,path:filePath}]});
-        logger.info(`✅ Payment success email sent to ${email}`);
-      }
-      catch (err) {
-        logger.error("❌ Email send error:", err);
-        throw err; // BullMQ will retry automatically
-      }
+
+      logger.info(`✅ Payment success email sent to ${email}`);
+    } catch (err) {
+      logger.error("❌ Stripe worker failed:", err);
+      throw err; 
     }
-  }
-  , { connection:queueRedis , concurrency: 5 }
+  },
+  { connection: queueRedis, concurrency: 5 }
+);
+
+
+
+
+new Worker(
+  "cancel-appointment",
+  async (job) => {
+    const stripe = new Stripe(process.env.STRIP_KEY);
+
+    try {
+          if (job.name === "CANCEL_APPOITMENT") {
+      const {appointmentId,date,status,paymentStatus,typeOfPayment,doctorName,doctorEmail,patientName,patientEmail,paymentIntentId}=job.data;      
+      try {        
+        await sendEmail({email:patientEmail,type:"CANCEL_APPOINTMENT_PATIENT",payload:{doctorName,patientName,doctorEmail,date,appointmentId,status,paymentStatus,typeOfPayment}});
+        logger.info(`✅ Cancel appointment email sent to ${patientEmail}`);
+      } catch (err) {
+        logger.error("❌ Cancel appointment Email send error:", err);
+        throw err; 
+      }
+
+      if (paymentStatus === "paid" && typeOfPayment === "credit_card" && paymentIntentId) {        
+          const refund = await stripe.refunds.create({ payment_intent: paymentIntentId });
+          logger.info(`💰 Refund processed for appointment ${appointmentId}, Refund ID: ${refund.id}`);
+
+          await appointmentModel.findOneAndUpdate({appointmentId}, {
+            paymentStatus: "refunded",
+            status:"cancelled"
+          });
+        }
+        else if (typeOfPayment==="cash"){
+            await appointmentModel.findOneAndUpdate({appointmentId}, {
+            paymentStatus: "refunded",
+            status:"cancelled"
+          });
+        }
+    }
+    } catch (err) {
+      logger.error("❌ Stripe worker failed:", err);
+      throw err; 
+    }
+
+  },
+  { connection:queueRedis , concurrency: 5 }
 );

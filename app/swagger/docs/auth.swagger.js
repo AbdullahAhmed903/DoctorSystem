@@ -23,6 +23,7 @@
  *               - password
  *               - gender
  *               - phone
+ *               - age
  *             properties:
  *               name:
  *                 type: string
@@ -37,8 +38,13 @@
  *                 type: string
  *                 example: Male
  *               phone:
- *                 type: string
- *                 example: "01090524452"
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   example: "01090524452"
+ *               age:
+ *                 type: integer
+ *                 example: 30
  *     responses:
  *       201:
  *         description: User registered successfully
@@ -96,6 +102,9 @@
  *               specialization:
  *                 type: string
  *                 example: Cardiology
+ *               age:
+ *                 type: integer
+ *                 example: 45
  *     responses:
  *       201:
  *         description: Doctor registered successfully
@@ -287,6 +296,7 @@
  *             required:
  *               - code
  *               - newpassword
+ *               - repetedNewPassword
  *               - identifier
  *               - userType
  *             properties:
@@ -294,6 +304,9 @@
  *                 type: string
  *                 example: OTP code received via email
  *               newpassword:
+ *                 type: string
+ *                 example: newpassword123
+ *               repetedNewPassword:
  *                 type: string
  *                 example: newpassword123
  *               identifier:
@@ -320,3 +333,138 @@
  *       500:
  *         description: Internal server error
  */
+
+/**
+ * @swagger
+ * /auth/refresh-token:
+ *   post:
+ *     summary: Refresh JWT token
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: New Access Token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: New Access Token
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     token:
+ *                       type: string
+ *                       example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *       400:
+ *         description: No Refresh Token
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: Logout user
+ *     description: Logs out the authenticated user by clearing the refresh token cookie.
+ *     tags:
+ *       - Auth
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logged out successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Logged out successfully
+ *       401:
+ *         description: Unauthorized – user is not authenticated
+ *       500:
+ *         description: Internal server error
+ */
+
+
+/**
+ * @swagger
+ * /auth/verifyEmail/{token}:
+ *   get:
+ *     summary: Verify user email
+ *     description: |
+ *       Verifies user email using a JWT token sent to the user's email.
+ *       Supports both Doctor and Patient roles.
+ *     tags:
+ *       - Auth
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Email verification JWT token
+ *     responses:
+ *       200:
+ *         description: Email verified successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Email verified successfully
+ *       400:
+ *         description: Invalid or tampered token / invalid payload
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Invalid or tampered token
+ *       401:
+ *         description: Token expired
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Token expired. Please re-register.
+ *       404:
+ *         description: User not found or email already verified
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: User not found or already verified
+ *       500:
+ *         description: Internal server error
+ */
+

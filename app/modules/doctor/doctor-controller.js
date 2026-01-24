@@ -1,25 +1,25 @@
 import sharp from "sharp";
 import logger from "../../../config/logger.js";
 import redisClient from "../../../config/redis.js";
-import imagekitUploding from "../../utils/image-kit.js";
-import { constants, sendResponse } from "../../utils/utills-service.js";
+import imagekitUploding from "../../../config/image-kit.js";
+import { CacheService, constants, sendResponse } from "../../utils/utills-service.js";
 // import tokenSchema from "../auth/token-schema.js";
 import Doctor from "../../DB/models/doctor-schema.js";
 
 
 
 
-
+const cacheService =new CacheService(redisClient);
 
 
 
 const getDoctorProfile = async (req, res) => {
   try {
     const { doctorId } = req.user;
-    const cacheKey = `doctor:${doctorId}`; // unique cache key
+    const cacheKey = cacheService.buildKey("doctor",doctorId); // unique cache key
 
     // 1️⃣ Check if data is already in Redis
-    const cachedProfile = await redisClient.get(cacheKey);
+    const cachedProfile = await cacheService.getCache(cacheKey);
     if (cachedProfile) {
       logger.info(`📦 Profile served from cache for doctorId: ${doctorId}`);
       return sendResponse(
@@ -40,7 +40,7 @@ const getDoctorProfile = async (req, res) => {
     }
 
     // 3️⃣ Store result in Redis for 10 minutes (600 seconds)
-    await redisClient.set(cacheKey,JSON.stringify(doctorProfile),{ex:600});
+    await cacheService.setCache(cacheKey, doctorProfile, 600);
 
     logger.info(`💾 Profile cached for doctorId: ${doctorId}`);
     return sendResponse(res, constants.RESPONSE_SUCCESS, "Doctor profile fetched successfully", doctorProfile);
@@ -56,22 +56,22 @@ const updateprofile = async (req, res) => {
   try {
   const { doctorId } = req.user;
   const updateData = req.body;
-        const { image, files: certFiles } = req.files || {};
+        const { profileImage, files: certFiles } = req.files || {};
     
   // If there's a file uploaded, add its buffer and mimetype to updateData
-  if (image?.length > 0) {
-    const compressedBuffer = await sharp(image[0].buffer)
+  if (profileImage?.length > 0) {
+    const compressedBuffer = await sharp(profileImage[0].buffer)
         .resize(800)
         .jpeg({ quality: 80 })
         .toBuffer();
       const uploadedImg = await imagekitUploding.upload({
         file: compressedBuffer,
-        fileName: image[0].originalname,
+        fileName: profileImage[0].originalname,
         folder: `doctor_${doctorId}_profile_image`,
         useUniqueFileName: true,
       });
 
-      updateData.profileImage = uploadedImg.url;
+      updateData.profileImage = uploadedImg.url;      
     }
 
   if (certFiles?.length > 0) {
@@ -98,9 +98,11 @@ const updateprofile = async (req, res) => {
   }
 
   // Invalidate the Redis cache for this doctor's profile
-  const cacheKey = `doctor:${doctorId}`;
+  const cacheKey = cacheService.buildKey("doctor", doctorId);
   await redisClient.del(cacheKey);
   logger.info(`🗑️ Cache invalidated for doctorId: ${doctorId} after profile update`);
+  await cacheService.setCache(cacheKey, updatedDoctor, 600);
+  logger.info(`💾 Updated profile cached for doctorId: ${doctorId}`);
   return sendResponse(res, constants.RESPONSE_SUCCESS, "Doctor profile updated successfully", updatedDoctor);
   } catch (error) {
         logger.error(`Error in getDoctorProfile: ${error.message}`);

@@ -1,5 +1,5 @@
 import clinicModel from "../../../DB/models/clinic-schema.js";
-import { CustomError } from "../../../utils/error-handling.js"
+import { CustomError } from "../../../middlewares/error-handling.js"
 import { constants, generateUserId, sendResponse } from "../../../utils/utills-service.js"
 import { v4 as uuidv4 } from 'uuid';
 

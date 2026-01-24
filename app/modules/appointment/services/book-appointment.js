@@ -3,7 +3,7 @@ import clinicModel from "../../../DB/models/clinic-schema.js"
 import Doctor from "../../../DB/models/doctor-schema.js"
 import patientModel from "../../../DB/models/patient-schema.js";
 import { createCheckoutSession } from "../../../service/payment-service.js";
-import { CustomError } from "../../../utils/error-handling.js"
+import { CustomError } from "../../../middlewares/error-handling.js"
 import { constants, generateUserId, timeToMinutes } from "../../../utils/utills-service.js"
 import { v4 as uuidv4 } from "uuid";
 
@@ -26,6 +26,14 @@ export const validateBookingInput = ({
   }
 };
 
+
+export const checkExistAppoitment=async(patientId)=>{
+    const existAppointment=await appointmentModel.findOne({patientId,status:{$in:["pending","confirmed"]}}).lean()
+    if(existAppointment) {
+        throw new CustomError("You have an existing appointment pending or confirmed",constants.RESPONSE_BAD_REQUEST)
+    }
+    return null
+}
 
 export const checkExistDoctor=async(doctorId)=>{
     const existDoctor=await Doctor.findOne({doctorId}).select("email name doctorId").lean()
@@ -132,7 +140,7 @@ const paymentTypesService = {
      return {newAppointment};
   },
 
-  card: async ({patientId, clinicId,doctorId, date, startTime, endTime, reasonForVisit,doctorName,appointmentPrice,appointmentCurrency }) => {
+  credit_card: async ({patientId, clinicId,doctorId, date, startTime, endTime, reasonForVisit,doctorName,appointmentPrice,appointmentCurrency }) => {
     const patientData=await patientModel.findOne({patientId}).select("email name").lean()
     const appointmentId=generateUserId("appointment")
     const session =await createCheckoutSession({customerEmail:patientData.email,doctorName,appointmentId,price:appointmentPrice,currency:appointmentCurrency})    
@@ -161,10 +169,8 @@ const paymentTypesService = {
 
 
 export const checkPaymentType = async (data, patientId, clinicId,doctorData,clinicFess) => {
-  // destructure all needed fields
-  // const { doctorId, date, startTime, endTime, reasonForVisit, typeOfPayment } = data;
-  
 
+  
   if (!paymentTypesService[data.typeOfPayment]) {
     throw new Error("Invalid payment type");
   }

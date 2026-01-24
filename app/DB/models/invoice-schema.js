@@ -13,7 +13,8 @@ const invoiceSchema = new mongoose.Schema(
     // optional: store extra info like doctor, clinic, notes
     doctorName: { type: String },
     serviceName: { type: String },
-    notes: { type: String }
+    notes: { type: String },
+    invoiceUrl: { type: String }, // URL to the PDF invoice
   },
   { timestamps: true }
 );

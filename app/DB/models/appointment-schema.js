@@ -56,7 +56,7 @@ const appointmentSchema = new mongoose.Schema({
 
   paymentStatus:{
     type:String,
-    enum:["pending","paid","failed"],
+    enum:["pending","paid","failed","refunded"],
     default:"pending"
   },
 
@@ -64,7 +64,11 @@ const appointmentSchema = new mongoose.Schema({
   notes: { type: String },
 
   createdBy: { type: String, enum: ["doctor", "patient"] },
-  stripeSessionId:{type:String}
+  stripeSessionId:{type:String},
+  paymentIntentId: {
+  type: String,
+  index: true
+},
 
 }, { timestamps: true,
     toJSON:{virtuals:true},
@@ -92,7 +96,7 @@ appointmentSchema.virtual("doctorDetails",
 {
 ref:"Doctor",
 localField:"doctorId",
-foreignField:"doctorid"
+foreignField:"doctorId"
 })
 const appointmentModel=mongoose.model("Appointment",appointmentSchema);
 

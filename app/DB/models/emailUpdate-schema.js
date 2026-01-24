@@ -3,10 +3,20 @@ import mongoose from "mongoose";
 
 
 const emailUpdateSchema = new mongoose.Schema({
-  doctorId: String,
+  userId: String,
   oldEmailCode: String,
   newEmailCode: String,
-  newEmail: String,
+  newEmail: {type: String,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      validate: {
+        validator: function(v) {
+          return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*\.(com|mail)$/.test(v);
+        },
+        message: props => `${props.value} is not a valid email address`
+      }
+  },
 
   expiresAt: {
     type: Date,

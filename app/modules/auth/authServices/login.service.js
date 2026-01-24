@@ -1,10 +1,10 @@
-import { sendEmail } from "../../../utils/emails/email-service.js";
-import { CustomError } from "../../../utils/error-handling.js";
+import { CustomError } from "../../../middlewares/error-handling.js";
 import jwtGenerator from "../../../utils/generate-token.js";
 import { constants, sendResponse } from "../../../utils/utills-service.js";
 import bcrypt from 'bcryptjs';
 import CONFIG from "../../../../config/config.js";
 import logger from "../../../../config/logger.js";
+import { sendEmail } from "../../../service/email/email-service.js";
 
 
 
@@ -16,7 +16,7 @@ import logger from "../../../../config/logger.js";
 
 
 
-export const loginUser=async(req,res,model,role,roleId)=>{
+export const loginUser=async(req,res,model,role)=>{
         const {email,password}=req.body;
         if(!email||!password){ 
             throw new CustomError("Email and password are required", constants.RESPONSE_BAD_REQUEST);         
@@ -30,7 +30,7 @@ export const loginUser=async(req,res,model,role,roleId)=>{
                 
             const isPasswordCorrect=await bcrypt.compare(password,user.password);
             if(!isPasswordCorrect){
-            return sendResponse(res,constants.RESPONSE_UNAUTHORIZED,"Invalid credentials")
+            return sendResponse(res,constants.RESPONSE_UNAUTHORIZED,"Invalid Email or password")
             }
                 const token=jwtGenerator({[`${role}Id`]: user[`${role}Id`], TO: role },CONFIG.JWT_SECRET_KEY,1,"h");
                 const refreshToken=jwtGenerator({ [`${role}Id`]: user[`${role}Id`], TO: role},CONFIG.JWT_REFRESH_SECRET_KEY,7,"d")

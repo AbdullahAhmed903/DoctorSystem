@@ -1,5 +1,5 @@
 import clinicModel from "../../../DB/models/clinic-schema.js"
-import { CustomError } from "../../../utils/error-handling.js"
+import { CustomError } from "../../../middlewares/error-handling.js"
 import { constants } from "../../../utils/utills-service.js"
 
 
@@ -9,8 +9,9 @@ export const checkExistingClinic=async({clinicId,doctorId})=>{
         throw new CustomError("Clinc Not Available",constants.RESPONSE_BAD_REQUEST)
         }
         return checkClinic
-
 }
+
+
 
 
 

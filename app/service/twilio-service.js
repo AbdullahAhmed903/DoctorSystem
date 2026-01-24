@@ -1,6 +1,6 @@
 import twilio from "twilio"; 
 import CONFIG from '../../config/config.js';
-import { asyncHandler } from "../utils/error-handling.js";
+import { asyncHandler } from "../middlewares/error-handling.js";
 
 
 
