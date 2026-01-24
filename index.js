@@ -1,5 +1,3 @@
-import cluster from "cluster";
-import os from "os";
 import express from "express";
 import CONFIG from "./config/config.js";
 import logger from "./config/logger.js";
@@ -11,6 +9,8 @@ import cors from "cors"
 import connectiondb from "./app/DB/connection-db.js";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./app/swagger/swagger.js";
+import path from "path";
+
 
 
 const corsConfig = {
@@ -43,8 +43,16 @@ app.use(
   morgan(':id :method :url :status :response-time ms', { stream: logger.stream })
 );
 
+app.get("/swagger.json", (req, res) => {
+  res.json(swaggerSpec);
+});
 
+if(CONFIG.NODE_ENV==="development"){
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+}
+else{
+app.use("/api-docs", express.static(path.join(process.cwd(), "public/swagger-ui")));
+}
 
 
 
