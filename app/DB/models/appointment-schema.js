@@ -64,7 +64,11 @@ const appointmentSchema = new mongoose.Schema({
   notes: { type: String },
 
   createdBy: { type: String, enum: ["doctor", "patient"] },
-  stripeSessionId:{type:String}
+  stripeSessionId:{type:String},
+  paymentIntentId: {
+  type: String,
+  index: true
+},
 
 }, { timestamps: true,
     toJSON:{virtuals:true},
