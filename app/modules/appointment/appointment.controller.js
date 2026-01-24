@@ -145,6 +145,7 @@ const webHook = asyncHandler(async (req, res) => {
 
   const {appointmentId} =event.data.object.metadata;
   const {email,name} = event.data.object.customer_details;
+  logger.info(`🔔 Received Stripe event: ${event.data.object}`);
   console.log(event.data);
   
 
@@ -155,6 +156,9 @@ const webHook = asyncHandler(async (req, res) => {
 
   // ✅ Payment success
   if (event.type === "checkout.session.completed") {
+       const paymentIntent = event.data.object;
+        console.log(paymentIntent.id); 
+        logger.info(`PaymentIntent ID: ${paymentIntent.id}`);
     await appointmentModel.updateOne(
       { appointmentId,paymentStatus: "pending" },
       { paymentStatus: "paid" }
