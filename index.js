@@ -11,9 +11,7 @@ import cors from "cors"
 import connectiondb from "./app/DB/connection-db.js";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./app/swagger/swagger.js";
-import swaggerUiDist from "swagger-ui-dist";
-import { readFileSync } from "fs";
-import path from "path";
+
 
 const corsConfig = {
   origin: "*", 
@@ -45,17 +43,10 @@ app.use(
   morgan(':id :method :url :status :response-time ms', { stream: logger.stream })
 );
 
-if(CONFIG.NODE_ENV==="development"){
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-}
-else{
-  const swaggerHtml = readFileSync(path.join(swaggerUiDist.getAbsoluteFSPath(), "index.html"), "utf8")
-  .replace("https://petstore.swagger.io/v2/swagger.json", JSON.stringify(swaggerSpec));
 
-app.get("/api-docs", (req, res) => {
-  res.send(swaggerHtml);
-});
-}
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+
 
 
 v1routes(app);
