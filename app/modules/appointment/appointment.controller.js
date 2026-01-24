@@ -161,7 +161,7 @@ const webHook = asyncHandler(async (req, res) => {
         logger.info(`PaymentIntent ID: ${paymentIntent.id}`);
     await appointmentModel.updateOne(
       { appointmentId,paymentStatus: "pending" },
-      { paymentStatus: "paid" }
+      { paymentStatus: "paid",paymentIntentId:paymentIntent.id }
     );
     console.log("going into payment");
     
