@@ -156,12 +156,12 @@ const webHook = asyncHandler(async (req, res) => {
 
   // ✅ Payment success
   if (event.type === "checkout.session.completed") {
-       const paymentIntent = event.data.object;
-        console.log(paymentIntent.id); 
-        logger.info(`PaymentIntent ID: ${paymentIntent.id}`);
+            const session = event.data.object;
+        const paymentIntentId = session.payment_intent; 
+        logger.info(`PaymentIntent ID: ${paymentIntentId}`);
     await appointmentModel.updateOne(
       { appointmentId,paymentStatus: "pending" },
-      { paymentStatus: "paid",paymentIntentId:paymentIntent.id }
+      { paymentStatus: "paid",paymentIntentId:paymentIntentId }
     );
     console.log("going into payment");
     
