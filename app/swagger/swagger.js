@@ -35,7 +35,7 @@ const options = {
       },
     ],
   },
-  apis: ["./app/swagger/docs/*.swagger.js"], // ملفات الـ swagger comments
+  apis: ["./**/*.swagger.js"], // ملفات الـ swagger comments
 };
 
 export const swaggerSpec = swaggerJSDoc(options);
