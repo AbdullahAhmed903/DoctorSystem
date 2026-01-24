@@ -40,10 +40,3 @@ const options = {
 
 export const swaggerSpec = swaggerJSDoc(options);
 
-export default function swaggerHandler(req, res) {
-  if (req.url.startsWith("/api-docs")) {
-    return swaggerUi.setup(swaggerSpec)(req, res);
-  } else {
-    res.status(404).send("Not Found");
-  }
-}
