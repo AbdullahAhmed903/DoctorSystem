@@ -55,14 +55,19 @@ app.get("/swagger.json", (req, res) => {
 
 // ================== SWAGGER UI ==================
 if (CONFIG.NODE_ENV === "development") {
+  // Local
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 } else {
+  // Production - serve static Swagger UI
   app.use(
     "/api-docs",
     express.static(path.join(process.cwd(), "public/swagger-ui"))
   );
+  // أي طلب `/api-docs/*` يرجع index.html
+  app.get("/api-docs/*", (req, res) => {
+    res.sendFile(path.join(process.cwd(), "public/swagger-ui/index.html"));
+  });
 }
-
 // ================== ROUTES ==================
 v1routes(app);
 
