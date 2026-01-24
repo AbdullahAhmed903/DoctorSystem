@@ -23,7 +23,7 @@ const options = {
       type: "apiKey",
       in: "header",
       name: "Authorization",
-      description: "Use format: bedo <JWT>",
+      description: "Use format: Bedo_<JWT>",
     },
   },
     },

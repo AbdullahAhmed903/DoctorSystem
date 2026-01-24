@@ -22,7 +22,7 @@ const doctorSchema = new mongoose.Schema({
   doctorId: { type: String,index:true, unique: true },
   ...baseFields,
   userType:{type:String,default:"doctor"},
-  specialization: { type: String, required: true, index: true },
+  specialization: { type: String, required: true, index: true ,maxlength:50,minlength:3},
   education: [EducationSchema], // array of education objects
   experience: [ExperienceSchema], // array of experience objects
   certifications: [String],

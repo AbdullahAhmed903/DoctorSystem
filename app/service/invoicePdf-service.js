@@ -1,53 +1,79 @@
 import PDFDocument from "pdfkit";
-import fs from "fs";
-import path from "path";
+import imagekitUploding from "../utils/image-kit.js";
 
-export const generateInvoicePDF=(invoice, appointment, user)=> {
-    console.log("invoice",invoice);
-    console.log("appointment",appointment);
-    console.log("user",user);
-
-    
+export async function generateInvoicePDFBuffer(invoice, appointment, doctorName, patientName, patientEmail) {
   return new Promise((resolve, reject) => {
-    const fileName = `invoice-${invoice.invoiceNumber}.pdf`;
-    const filePath = path.join(process.cwd(), "tmp", fileName);
-
     const doc = new PDFDocument({ size: "A4", margin: 50 });
-    const stream = fs.createWriteStream(filePath);
+    const chunks = [];
 
-    doc.pipe(stream);
+    doc.on("data", (chunk) => chunks.push(chunk));
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("error", reject);
 
-    // Header
-    doc.fontSize(20).text("INVOICE", { align: "center" });
-    doc.moveDown();
+    // ===== HEADER =====
+    doc
+      .fontSize(20)
+      .text("Appointment Invoice", { align: "center" })
+      .moveDown(0.5);
 
-    // Invoice info
-    doc.fontSize(12)
-      .text(`Invoice Number: ${invoice.invoiceNumber}`)
-      .text(`Date: ${new Date(invoice.createdAt).toDateString()}`)
-      .text(`Payment Method: ${invoice.paymentMethod}`)
-      .moveDown();
+    doc
+      .fontSize(12)
+      .text(`Invoice Number: ${invoice.invoiceNumber}`, { align: "left" })
+      .text(`Date: ${new Date(invoice.createdAt).toLocaleDateString()}`, { align: "left" })
+      .text(`Payment Method: ${invoice.paymentMethod}`, { align: "left" })
+      .moveDown(1);
 
-    // Customer
-    doc.text(`Patient Name: ${user.name}`);
-    doc.text(`Email: ${user.email}`);
-    doc.moveDown();
+    // ===== BILL TO / DETAILS =====
+    doc
+      .fontSize(14)
+      .text("Bill To:", { underline: true })
+      .moveDown(0.2);
 
-    // Appointment
-    doc.text(`Doctor: ${appointment.doctorName}`);
-    doc.text(`Appointment Date: ${appointment.date}`);
+    doc
+      .fontSize(12)
+      .text(`Patient Name: ${patientName}`)
+      .text(`Email: ${patientEmail}`)
+      .moveDown(0.5);
+
+
+    doc.text(`Doctor: ${doctorName}`).moveDown(1);
+
+    // ===== APPOINTMENT DETAILS TABLE =====
+    doc.fontSize(14).text("Appointment Details", { underline: true });
+    doc.moveDown(0.5);
+
+    doc.fontSize(12);
+    doc.text(`Date: ${appointment.date}`);
     doc.text(`Time: ${appointment.startTime} - ${appointment.endTime}`);
-    doc.moveDown();
+    doc.text(`Fees: ${invoice.amount} ${invoice.currency}`);
+    doc.moveDown(1);
 
-    // Amount
-    doc.fontSize(14).text(
-      `Total Paid: ${invoice.amount} ${invoice.currency}`,
-      { align: "right" }
-    );
+    // ===== TOTAL =====
+    doc.fontSize(16).text(`Total Paid: ${invoice.amount} ${invoice.currency}`, { align: "right", bold: true });
+    doc.moveDown(1);
+
+    // ===== FOOTER =====
+    doc
+      .fontSize(10)
+      .fillColor("gray")
+      .text(
+        "Thank you for booking your appointment with us. If you have any questions, contact support.",
+        { align: "center" }
+      );
 
     doc.end();
-
-    stream.on("finish", () => resolve({ filePath, fileName }));
-    stream.on("error", reject);
   });
+}
+
+
+// Upload directly
+export async function uploadInvoiceBufferToImageKit(buffer, fileName) {
+  const result = await imagekitUploding.upload({
+    file: buffer,
+    fileName,
+    folder: "/invoices",
+    useUniqueFileName: true,
+  });
+
+  return result.url;
 }

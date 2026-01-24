@@ -87,6 +87,8 @@ class CONFIG {
     this.UPSTASH_REDIS_REST_URL=process.env.UPSTASH_REDIS_REST_URL
     this.UPSTASH_REDIS_REST_TOKEN=process.env.UPSTASH_REDIS_REST_TOKEN
 
+    this.REDIS_URL=process.env.REDIS_URL
+
 
     CONFIG.instance = this;
   }

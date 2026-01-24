@@ -1,5 +1,5 @@
 import ImageKit from "imagekit";
-import CONFIG from "../../config/config.js";
+import CONFIG from "./config.js";
 
 
 

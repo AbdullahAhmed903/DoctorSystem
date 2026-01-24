@@ -6,7 +6,8 @@
   "scripts": {
     "test": "set NODE_OPTIONS=--experimental-vm-modules && jest",
     "dev": "nodemon index.js",
-    "start": "node index.js"
+    "start": "node index.js",
+    "worker": "node app/bullmq/workers/email.worker.js"
   },
   "keywords": [],
   "author": "",

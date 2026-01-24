@@ -1,6 +1,5 @@
-import { CustomError } from "../../../utils/error-handling.js";
+import { CustomError } from "../../../middlewares/error-handling.js";
 import jwtGenerator from "../../../utils/generate-token.js";
-import { sendEmail } from "../../../utils/emails/email-service.js";
 import { constants, generateUserId } from "../../../utils/utills-service.js";
 import logger from "../../../../config/logger.js";
 import CONFIG from "../../../../config/config.js";

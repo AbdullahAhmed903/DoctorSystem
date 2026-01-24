@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import CONFIG from '../../../config/config.js';
+import { AddressSchema } from './utills-schema.js';
 
 export const createBaseUserSchema = () => {
   return {
@@ -30,7 +31,9 @@ export const createBaseUserSchema = () => {
     },
     gender: { type: String, enum: ['Male', 'Female', 'Other'] },
     isDeleted: { type: Boolean, default: false },
+    age:{type:Number},
     profileImage: String,
+    address:AddressSchema
   };
 };
 

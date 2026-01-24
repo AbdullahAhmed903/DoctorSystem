@@ -1,11 +1,12 @@
 import Doctor from "../../../DB/models/doctor-schema.js";
 import patientModel from "../../../DB/models/patient-schema.js";
 import verificationModel from "../../../DB/models/verification-model.js";
-import { CustomError } from "../../../utils/error-handling.js";
+import { CustomError } from "../../../middlewares/error-handling.js";
 import { constants, randomNumber } from "../../../utils/utills-service.js";
 import CryptoJS from "crypto-js";
 import CONFIG from "../../../../config/config.js";
 import { sendOTP } from "../../../service/twilio-service.js";
+import { sendEmail } from "../../../service/email/email-service.js";
 
 
 
@@ -104,9 +105,7 @@ const otpSenders = {
 
 export const sendUserOtp = (identifierType, userData) => {
   
-  const sender = otpSenders[identifierType];
-  console.log(sender);
-  
+  const sender = otpSenders[identifierType];  
 
   if (!sender) {
     throw new Error(`Unsupported identifier type: ${identifierType}`);

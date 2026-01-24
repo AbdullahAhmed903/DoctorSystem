@@ -1,3 +1,5 @@
+import cluster from "cluster";
+import os from "os";
 import express from "express";
 import CONFIG from "./config/config.js";
 import logger from "./config/logger.js";
@@ -10,7 +12,23 @@ import connectiondb from "./app/DB/connection-db.js";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./app/swagger/swagger.js";
 
+// const numCPUs = os.cpus().length;
+// if(cluster.isPrimary){
+//   logger.info(`Primary process ${process.pid} is running`);
+//   console.log(process.pid);
+  
 
+//   // Fork workers
+//   for (let i = 0; i < numCPUs; i++) {
+//     cluster.fork();
+//   }
+//    cluster.on("exit", (worker) => {
+//     logger.error(`Worker ${worker.process.pid} died. Restarting...`);
+//     cluster.fork();
+//   });
+// }
+
+// else{
 
 const corsConfig={
   origin:"*",
@@ -93,5 +111,6 @@ app.use((err, req, res, next) => {
 });
 
 
+// }
 export default app
 

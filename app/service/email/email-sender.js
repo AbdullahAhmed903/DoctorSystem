@@ -1,6 +1,4 @@
-import nodemailer from 'nodemailer';
-import CONFIG from '../../config/config.js';
-
+import transporter from "../../../config/email.js";
 
 
 const SEND_EMAIL_BY_NODEMAILER = async (
@@ -9,13 +7,6 @@ const SEND_EMAIL_BY_NODEMAILER = async (
     message,
     attachments = []
 ) => {
-        const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-                user:"abdullahahmed02000@gmail.com",
-                pass:"dubglohvbxlepfga",
-            },
-        });
         // send mail with defined transport object
         const info = await transporter.sendMail({
         from: `DoctorSystem ${process.env.nodeMailerEmail}`, // sender address

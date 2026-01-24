@@ -1,9 +1,8 @@
 import logger from "../../../config/logger.js";
 import redisClient from "../../../config/redis.js";
 import clinicModel from "../../DB/models/clinic-schema.js";
-import { asyncHandler, CustomError } from "../../utils/error-handling.js";
+import { asyncHandler, CustomError } from "../../middlewares/error-handling.js";
 import { sendResponse, constants, randomNumber, CacheService } from "../../utils/utills-service.js";
-import { v4 as uuidv4 } from 'uuid';
 import { checkRequiredFields, ClinicPolicy, createClinic, generateScheduleKey } from "./clinicServices/add-clinic-service.js";
 import { checkExistingClinic, UpdateFields } from "./clinicServices/update-clinic-service.js";
 
@@ -43,7 +42,7 @@ const addClinic =asyncHandler( async (req, res) => {
 
 
 
-const getDoctorClinics=asyncHandler( async(req,res)=>{
+const getDoctorClinics=asyncHandler(async(req,res)=>{
         const {doctorId}=req.user;
 
         const cacheKey=casheService.buildKey("doctorClinics",doctorId)
@@ -56,9 +55,10 @@ const getDoctorClinics=asyncHandler( async(req,res)=>{
             res,
             constants.RESPONSE_SUCCESS,
             "Doctor Clinics fetched successfully (from cache)",
-            JSON.parse(cachedDoctorClinics)
+            cachedDoctorClinics
             );
         }
+        console.log("gggggggg");
         
         const clinics=await clinicModel.find({doctorId:doctorId}).select("-_id -__v -isDeleted")
         casheService.setCache(cacheKey,clinics,600)
@@ -69,8 +69,7 @@ const getDoctorClinics=asyncHandler( async(req,res)=>{
 
 const getOneClinicById=asyncHandler(async(req,res)=>{
     const {clinicId}=req.params;
-    
-    const {doctorId}=req.user;
+    const {doctorId}=req.user
 
     const checkClinic=await checkExistingClinic({clinicId,doctorId})
 
@@ -82,7 +81,6 @@ const updateClinicInfo=asyncHandler(async(req,res)=>{
         const {clinicId}=req.params;
         const {doctorId}=req.user
         const body=req.body
-        const update={}
         await checkExistingClinic({clinicId,doctorId})
 
         const clinic=new UpdateFields(clinicModel,body)
@@ -99,6 +97,35 @@ const updateClinicInfo=asyncHandler(async(req,res)=>{
 
 
 
+const getClinicAvailability=asyncHandler(async(req,res)=>{
+    const {clinicId}=req.params;
+    const cacheKey=casheService.buildKey("clinicAvailability",clinicId)
+    const cacheclinicAvailability=await casheService.getCache(cacheKey)
+    if (cacheclinicAvailability) {
+            logger.info(`📦 Clinics served from cache for clinicId: ${clinicId}`);
+            return sendResponse(
+            res,
+            constants.RESPONSE_SUCCESS,
+            "Clinics Availability fetched successfully (from cache)",
+            cacheclinicAvailability
+            );
+        }
+    const clinic=await clinicModel.findOne({clinicId,isDeleted:false}).select("-_id -scheduleKey -__v -isDeleted ")
+    await casheService.setCache(cacheKey,clinic,600)
+      if (!clinic) {
+    return sendResponse(res, constants.RESPONSE_NOT_FOUND, "Clinic not found");
+  }
+
+  return sendResponse(
+    res,
+    constants.RESPONSE_SUCCESS,
+    "Clinic availability retrieved successfully",
+    clinic
+  );
+    
+})
+
+
 
 
 
@@ -106,5 +133,6 @@ export {
     addClinic,
     getDoctorClinics,
     getOneClinicById,
-    updateClinicInfo
+    updateClinicInfo,
+    getClinicAvailability,
 };

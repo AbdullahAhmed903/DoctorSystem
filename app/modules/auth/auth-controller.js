@@ -3,7 +3,7 @@ import CONFIG from "../../../config/config.js";
 import { constants, randomNumber, sendResponse } from "../../utils/utills-service.js";
 import logger from "../../../config/logger.js";
 import patientModel from "../../DB/models/patient-schema.js";
-import { asyncHandler, CustomError } from "../../utils/error-handling.js";
+import { asyncHandler, CustomError } from "../../middlewares/error-handling.js";
 import Doctor from "../../DB/models/doctor-schema.js";
 import verificationModel from "../../DB/models/verification-model.js";
 import { refreshTokenService } from "./authServices/refresh-token-service.js";
@@ -66,9 +66,9 @@ const verifyEmail=asyncHandler( async(req,res,next)=>{
 
 
 
-const loginDoctor=async(req,res,next)=>{
+const loginDoctor=asyncHandler( async(req,res,next)=>{
       return  loginUser(req,res,Doctor,"doctor","doctorId")
-}
+})
 
 
 
@@ -170,6 +170,16 @@ const refreshToken = asyncHandler(async (req, res) => {
 });
 
 
+const logout=asyncHandler(async(req,res)=>{
+    res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'strict',
+    });
+    return sendResponse(res,constants.RESPONSE_SUCCESS,"Logged out successfully")
+})
+
+
 
 
 export{
@@ -180,5 +190,6 @@ export{
     loginPatient,
     forgetPassword,
     resetPassword,
-    refreshToken
+    refreshToken,
+    logout
 }

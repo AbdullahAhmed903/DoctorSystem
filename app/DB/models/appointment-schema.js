@@ -56,7 +56,7 @@ const appointmentSchema = new mongoose.Schema({
 
   paymentStatus:{
     type:String,
-    enum:["pending","paid","failed"],
+    enum:["pending","paid","failed","refunded"],
     default:"pending"
   },
 
@@ -96,7 +96,7 @@ appointmentSchema.virtual("doctorDetails",
 {
 ref:"Doctor",
 localField:"doctorId",
-foreignField:"doctorid"
+foreignField:"doctorId"
 })
 const appointmentModel=mongoose.model("Appointment",appointmentSchema);
 
