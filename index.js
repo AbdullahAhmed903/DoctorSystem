@@ -40,16 +40,10 @@ app.use(
   morgan(':id :method :url :status :response-time ms', { stream: logger.stream })
 );
 
-app.get("/swagger.json", (req, res) => {
-  res.json(swaggerSpec);
-});
 
-if(CONFIG.NODE_ENV==="development"){
+
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-}
-else{
-app.use("/api-docs", express.static(path.join(process.cwd(), "public/swagger-ui")));
-}
+
 
 
 

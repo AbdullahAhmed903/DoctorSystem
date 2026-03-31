@@ -1,6 +1,9 @@
 import swaggerUi from "swagger-ui-express";
 import swaggerJSDoc from "swagger-jsdoc";
 
+
+
+
 const options = {
   definition: {
     openapi: "3.0.0",
@@ -35,7 +38,7 @@ const options = {
       },
     ],
   },
-  apis: ["./app/swagger/docs/*.swagger.js"], // ملفات الـ swagger comments
+   apis: ["./app/swagger/docs/*.swagger.js"],
 };
 
 export const swaggerSpec = swaggerJSDoc(options);
